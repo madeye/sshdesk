@@ -201,8 +201,8 @@ class NativePtyContracts(unittest.TestCase):
         original = termios.tcgetattr(slave)
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 24, 80, 800, 480))
         environment = {**os.environ, "TERM": "xterm-256color", "SSHDESK_RENDER": "auto" if kitty else "ansi",
-                       "RUN_AS": "this-account-must-never-run-the-shell"}
-        args = [executable("sshdesk-server"), "--capture", "synthetic", "--no-input"]
+                       "RUN_AS": "this-account-must-never-run-the-shell", "SSHDESK_COLOR": "16"}
+        args = [executable("sshdesk-server"), "--capture", "synthetic", "--no-input", "--color=auto"]
         if shell:
             args = [executable("sshdesk-forced-command")]
             environment["SSH_ORIGINAL_COMMAND"] = "shell"
@@ -259,7 +259,9 @@ class NativePtyContracts(unittest.TestCase):
             os.close(slave)
 
     def test_detach_resize_and_restore(self) -> None:
-        self.session()
+        output = self.session()
+        self.assertIn(b"\x1b[30;", output, "--color=auto must preserve the environment override")
+        self.assertNotIn(b"38;5;", output)
 
     def test_signal_cleanup(self) -> None:
         self.session(terminate=True)

@@ -23,6 +23,6 @@ test_shell_selector_uses_authenticated_account_without_login_flag (test_native_i
 test_synthetic_session_resize_detach_and_utf8 (test_native_integration.NativeWindowsPtyContracts.test_synthetic_session_resize_detach_and_utf8) ... skipped 'native Windows ConPTY test'
 
 ----------------------------------------------------------------------
-Ran 23 tests in 2.153s
+Ran 23 tests in 2.379s
 
 OK (skipped=4)

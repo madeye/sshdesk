@@ -232,10 +232,10 @@ fn serverOptions(a: A, args: []const []const u8) !Options {
     };
     if (!options.check) {
         for (args, 0..) |arg, i| if (eq(arg, "--color") and i + 1 < args.len) {
-            try env.put("SSHDESK_COLOR", args[i + 1]);
+            if (!eq(args[i + 1], "auto")) try env.put("SSHDESK_COLOR", args[i + 1]);
         };
         for (args) |arg| if (std.mem.startsWith(u8, arg, "--color=")) {
-            try env.put("SSHDESK_COLOR", arg[8..]);
+            if (!eq(arg[8..], "auto")) try env.put("SSHDESK_COLOR", arg[8..]);
         };
         const caps = try @import("capabilities.zig").detect(&env);
         options.color = caps.color;

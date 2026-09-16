@@ -4,6 +4,7 @@ pub fn build(b: *std.Build) void {
     if (!std.mem.eql(u8, builtin.zig_version_string, "0.15.2")) @panic("SSHDESK requires Zig 0.15.2");
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+    b.getInstallStep().dependOn(&b.addInstallFileWithDir(b.path("LICENSE"), .prefix, "share/licenses/sshdesk/LICENSE").step);
     const zlib = b.dependency("zlib", .{});
     const zmodule = b.createModule(.{ .target = target, .optimize = optimize, .link_libc = true });
     zmodule.addIncludePath(zlib.path(""));
