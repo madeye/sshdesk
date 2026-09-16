@@ -1,0 +1,11 @@
+Build Summary: 8/8 steps succeeded; 39/44 tests passed; 5 skipped
+test success
++- run test 39 passed 5 skipped 951ms MaxRSS:13M
+   +- compile test Debug native success 2s MaxRSS:416M
+      +- WriteFile cached
+      +- compile lib png Debug native cached 43ms MaxRSS:33M
+      |  +- WriteFile pnglibconf.h cached
+      |  +- WriteFile cached
+      |  +- compile lib z Debug native cached 47ms MaxRSS:33M
+      |  +- compile lib z Debug native (reused)
+      +- compile lib png Debug native (+4 more reused dependencies)

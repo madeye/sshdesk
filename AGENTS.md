@@ -11,34 +11,34 @@ in this repository must tell the user this.
 
 ## Development setup
 
-SSHDESK requires Python 3.10 or newer. Create a local virtual environment and
-install the package with its development dependencies:
+SSHDESK's native implementation requires Zig 0.15.2. Build without running
+privileged installers:
 
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e '.[dev]'
+```sh
+scripts/with-zig-sdk.sh zig build -Doptimize=ReleaseSafe
 ```
 
-Install `.[dev,fast]` only when testing the optional NumPy and OpenCV capture
-paths. Do not run the privileged host installation scripts for routine
-development.
+On Windows run `zig build -Doptimize=ReleaseSafe` directly. The macOS wrapper
+selects an existing compatible SDK without changing system configuration.
 
 ## Verification
 
-Run the same core checks used by CI:
-
-```bash
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/ruff check src tests
+```sh
+zig fmt --check build.zig native
+scripts/with-zig-sdk.sh zig build test
+scripts/with-zig-sdk.sh zig build -Doptimize=ReleaseSafe
+python3 -m unittest tests.test_native_integration -v
 for script in scripts/*.sh; do sh -n "$script"; done
 ```
 
-For focused SSH routing work, run:
+Parse all `scripts/*.ps1` using PowerShell's language parser on Windows. CI runs
+native builds/tests on Linux, macOS, and Windows and Xvfb tests on Linux.
+Record live desktop validation separately from synthetic tests and compilation.
 
-```bash
-.venv/bin/python -m unittest tests.test_agent tests.test_installer -v
-```
+The optional black-box integration harness uses only Python's standard library;
+installation and normal operation require no Python. Run it with
+`python3 -m unittest discover -s tests -v`. The migration ledger is in
+`docs/test-migration.md`.
 
 ## Engineering constraints
 
@@ -49,8 +49,8 @@ For focused SSH routing work, run:
 - Never start a normal shell through `RUN_AS`, `sudo`, or the desktop owner's
   account. Shell access must retain the authenticated SSH account identity.
 - Keep agent commands restricted to the existing parser and exact allowlist.
-- Preserve Linux, macOS, and Windows import behavior when changing shared Python
-  modules.
+- Compile platform integrations conditionally; synthetic tests and unrelated
+  commands must work without optional desktop backend libraries.
 - Add focused tests for behavior changes and keep unrelated refactors separate.
 
 ## Working tree

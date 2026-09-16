@@ -1,0 +1,123 @@
+test_actions_are_bounded (test_agent.AgentTests.test_actions_are_bounded) ... ok
+test_agent_rejects_untrusted_shell_commands (test_agent.AgentTests.test_agent_rejects_untrusted_shell_commands) ... This account accepts only SSHDESK desktop, shell selector, or agent commands.
+usage: sshdesk-agent [-h]
+                     {info,screenshot,observe,move,click,scroll,type,key,session} ...
+sshdesk-agent: error: argument command: invalid choice: 'info;' (choose from 'info', 'screenshot', 'observe', 'move', 'click', 'scroll', 'type', 'key', 'session')
+usage: sshdesk-agent [-h]
+                     {info,screenshot,observe,move,click,scroll,type,key,session} ...
+sshdesk-agent: error: argument command: invalid choice: '&&' (choose from 'info', 'screenshot', 'observe', 'move', 'click', 'scroll', 'type', 'key', 'session')
+sshdesk-agent: remote screenshots are written only to stdout
+ok
+test_login_shell_arguments_match_each_platform (test_agent.AgentTests.test_login_shell_arguments_match_each_platform) ... ok
+test_observe_and_computer_use_actions (test_agent.AgentTests.test_observe_and_computer_use_actions) ... ok
+test_platform_selects_x11_and_wayland (test_agent.AgentTests.test_platform_selects_x11_and_wayland) ... ok
+test_portable_forced_command_accepts_explicit_desktop_command (test_agent.AgentTests.test_portable_forced_command_accepts_explicit_desktop_command) ... ok
+test_portable_forced_command_keeps_agent_commands_restricted (test_agent.AgentTests.test_portable_forced_command_keeps_agent_commands_restricted) ... usage: sshdesk-agent [-h]
+                     {info,screenshot,observe,move,click,scroll,type,key,session} ...
+sshdesk-agent: error: argument command: invalid choice: 'info;' (choose from 'info', 'screenshot', 'observe', 'move', 'click', 'scroll', 'type', 'key', 'session')
+ok
+test_portable_forced_command_opens_shell_selector (test_agent.AgentTests.test_portable_forced_command_opens_shell_selector) ... ok
+test_portable_forced_command_requires_pty_for_shell_selector (test_agent.AgentTests.test_portable_forced_command_requires_pty_for_shell_selector) ... The SSH shell selector requires an interactive terminal (PTY).
+ok
+test_portable_forced_command_routes_only_agent_grammar (test_agent.AgentTests.test_portable_forced_command_routes_only_agent_grammar) ... This account accepts only SSHDESK desktop, shell selector, or agent commands.
+ok
+test_remote_rejects_non_positive_timeout (test_agent.AgentTests.test_remote_rejects_non_positive_timeout) ... ok
+test_remote_reports_timeout_expiry_without_traceback (test_agent.AgentTests.test_remote_reports_timeout_expiry_without_traceback) ... ok
+test_remote_request_timeout_is_configurable (test_agent.AgentTests.test_remote_request_timeout_is_configurable) ... ok
+test_remote_request_uses_only_fixed_ssh_command (test_agent.AgentTests.test_remote_request_uses_only_fixed_ssh_command) ... ok
+test_split_command_is_an_argument_vector (test_agent.AgentTests.test_split_command_is_an_argument_vector) ... ok
+test_windows_shell_selector_execs_without_login_flag (test_agent.AgentTests.test_windows_shell_selector_execs_without_login_flag) ... ok
+test_ydotool_adds_shift_for_uppercase (test_agent.AgentTests.test_ydotool_adds_shift_for_uppercase) ... ok
+test_ydotool_checks_daemon_without_injecting_input (test_agent.AgentTests.test_ydotool_checks_daemon_without_injecting_input) ... ok
+test_errors_keep_the_session_alive (test_agent_session.AgentSessionTests.test_errors_keep_the_session_alive) ... ok
+test_info_and_quit_stop_the_session (test_agent_session.AgentSessionTests.test_info_and_quit_stop_the_session) ... ok
+test_oversized_requests_are_rejected_without_parsing (test_agent_session.AgentSessionTests.test_oversized_requests_are_rejected_without_parsing) ... ok
+test_keyboard_interrupt_during_startup_exits_cleanly (test_agent_session.ServerInterruptTests.test_keyboard_interrupt_during_startup_exits_cleanly) ... ok
+test_keyboard_interrupt_from_session_exits_cleanly (test_agent_session.ServerInterruptTests.test_keyboard_interrupt_from_session_exits_cleanly) ... ok
+test_capture_reports_drained_stderr_after_stream_ends (test_capture.FFmpegCaptureTests.test_capture_reports_drained_stderr_after_stream_ends) ... ok
+test_set_frame_rate_bounds_are_enforced (test_capture.FFmpegCaptureTests.test_set_frame_rate_bounds_are_enforced) ... ok
+test_stderr_drain_ignores_read_errors (test_capture.FFmpegCaptureTests.test_stderr_drain_ignores_read_errors) ... ok
+test_stderr_drain_keeps_tail_and_survives_closed_stream (test_capture.FFmpegCaptureTests.test_stderr_drain_keeps_tail_and_survives_closed_stream) ... ok
+test_close_stops_screen_and_remote_desktop_sessions (test_capture.GnomeCaptureTests.test_close_stops_screen_and_remote_desktop_sessions) ... ok
+test_display_configuration_becomes_complete_desktop_area (test_capture.GnomeCaptureTests.test_display_configuration_becomes_complete_desktop_area) ... ok
+test_macos_grab_does_not_call_pillow_screencapture (test_capture.NativeCaptureTests.test_macos_grab_does_not_call_pillow_screencapture) ... ok
+test_macos_quartz_capture_keeps_matching_logical_size (test_capture.NativeCaptureTests.test_macos_quartz_capture_keeps_matching_logical_size) ... ok
+test_macos_quartz_capture_resizes_to_logical_pixels (test_capture.NativeCaptureTests.test_macos_quartz_capture_resizes_to_logical_pixels) ... ok
+test_macos_quartz_missing_frame_asks_for_screen_recording (test_capture.NativeCaptureTests.test_macos_quartz_missing_frame_asks_for_screen_recording) ... ok
+test_capture_helper_timeout_becomes_clean_runtime_error (test_capture.WaylandCaptureTests.test_capture_helper_timeout_becomes_clean_runtime_error) ... ok
+test_pillow_fallback_prescales_and_fingerprints_frame (test_capture.X11CaptureTests.test_pillow_fallback_prescales_and_fingerprints_frame) ... skipped "python-xlib unavailable: No module named 'Xlib'"
+test_consecutive_mouse_moves_are_coalesced_without_losing_clicks (test_input.InputTests.test_consecutive_mouse_moves_are_coalesced_without_losing_clicks) ... ok
+test_coordinate_translation_and_letterbox (test_input.InputTests.test_coordinate_translation_and_letterbox) ... ok
+test_cursor_report_is_consumed_as_latency_event (test_input.InputTests.test_cursor_report_is_consumed_as_latency_event) ... ok
+test_escape_alt_and_detach (test_input.InputTests.test_escape_alt_and_detach) ... ok
+test_key_mapping (test_input.InputTests.test_key_mapping) ... ok
+test_legacy_x10_mouse_fallback (test_input.InputTests.test_legacy_x10_mouse_fallback) ... ok
+test_modified_navigation_keys (test_input.InputTests.test_modified_navigation_keys) ... ok
+test_mutter_input_uses_linked_stream_and_bounds_pointer (test_input.InputTests.test_mutter_input_uses_linked_stream_and_bounds_pointer) ... ok
+test_oversized_terminal_sequence_is_rejected (test_input.InputTests.test_oversized_terminal_sequence_is_rejected) ... ok
+test_pixel_coordinate_translation_and_letterbox (test_input.InputTests.test_pixel_coordinate_translation_and_letterbox) ... ok
+test_sgr_mouse (test_input.InputTests.test_sgr_mouse) ... ok
+test_process_is_trusted_falls_back_to_application_services (test_input.MacOSTrustTests.test_process_is_trusted_falls_back_to_application_services) ... ok
+test_process_is_trusted_is_false_without_application_services (test_input.MacOSTrustTests.test_process_is_trusted_is_false_without_application_services) ... ok
+test_process_is_trusted_uses_quartz_when_exported (test_input.MacOSTrustTests.test_process_is_trusted_uses_quartz_when_exported) ... ok
+test_bootstrap_has_valid_shell_syntax_and_help (test_installer.InstallerTests.test_bootstrap_has_valid_shell_syntax_and_help) ... ok
+test_posix_forced_command_accepts_shell_selector (test_installer.InstallerTests.test_posix_forced_command_accepts_shell_selector) ... ok
+test_removed_network_options_are_unknown (test_installer.InstallerTests.test_removed_network_options_are_unknown) ... ok
+test_wayland_dependencies_are_installed_and_checked_before_openssh (test_installer.InstallerTests.test_wayland_dependencies_are_installed_and_checked_before_openssh) ... ok
+test_license_uses_pep621_table_for_older_setuptools (test_installer.PackageCompatibilityTests.test_license_uses_pep621_table_for_older_setuptools) ... ok
+test_linux_installer_allows_isolated_build_dependencies (test_installer.PackageCompatibilityTests.test_linux_installer_allows_isolated_build_dependencies) ... ok
+test_windows_bootstrap_downloads_and_configures (test_installer.WindowsInstallerTests.test_windows_bootstrap_downloads_and_configures) ... ok
+test_kitty_probe_selects_real_pixel_session (test_lifecycle.LifecycleTests.test_kitty_probe_selects_real_pixel_session) ... ok
+test_plain_pty_session_detaches_and_restores (test_lifecycle.LifecycleTests.test_plain_pty_session_detaches_and_restores) ... ok
+test_server_rejects_non_pty_session_cleanly (test_lifecycle.LifecycleTests.test_server_rejects_non_pty_session_cleanly) ... ok
+test_terminal_restored_after_exception (test_lifecycle.LifecycleTests.test_terminal_restored_after_exception) ... ok
+test_agent_interrupt_restores_session_resources (test_native_integration.NativeContracts.test_agent_interrupt_restores_session_resources) ... ok
+test_bounded_json_session_recovers_and_quits (test_native_integration.NativeContracts.test_bounded_json_session_recovers_and_quits) ... ok
+test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child (test_native_integration.NativeContracts.test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child) ... skipped 'Linux Xvfb failure fixture'
+test_invalid_options_are_rejected_before_capture (test_native_integration.NativeContracts.test_invalid_options_are_rejected_before_capture) ... ok
+test_nine_native_commands_and_help (test_native_integration.NativeContracts.test_nine_native_commands_and_help) ... ok
+test_non_pty_and_exact_forced_command_allowlist (test_native_integration.NativeContracts.test_non_pty_and_exact_forced_command_allowlist) ... ok
+test_remote_fixed_argv_unicode_timeout_and_response (test_native_integration.NativeContracts.test_remote_fixed_argv_unicode_timeout_and_response) ... ok
+test_synthetic_check_and_color_fallbacks (test_native_integration.NativeContracts.test_synthetic_check_and_color_fallbacks) ... ok
+test_tmux_split_uses_fixed_argv (test_native_integration.NativeContracts.test_tmux_split_uses_fixed_argv) ... ok
+test_wayland_native_agent_argv_and_uppercase_modifiers (test_native_integration.NativeContracts.test_wayland_native_agent_argv_and_uppercase_modifiers) ... skipped 'Linux Wayland backend fixture'
+test_detach_resize_and_restore (test_native_integration.NativePtyContracts.test_detach_resize_and_restore) ... ok
+test_input_stays_responsive_under_output_backpressure (test_native_integration.NativePtyContracts.test_input_stays_responsive_under_output_backpressure) ... ok
+test_kitty_probe_and_native_pixels (test_native_integration.NativePtyContracts.test_kitty_probe_and_native_pixels) ... ok
+test_shell_retains_authenticated_identity (test_native_integration.NativePtyContracts.test_shell_retains_authenticated_identity) ... ok
+test_signal_cleanup (test_native_integration.NativePtyContracts.test_signal_cleanup) ... ok
+test_shell_selector_uses_authenticated_account_without_login_flag (test_native_integration.NativeWindowsPtyContracts.test_shell_selector_uses_authenticated_account_without_login_flag) ... skipped 'native Windows ConPTY test'
+test_synthetic_session_resize_detach_and_utf8 (test_native_integration.NativeWindowsPtyContracts.test_synthetic_session_resize_detach_and_utf8) ... skipped 'native Windows ConPTY test'
+test_auto_render_scale_tracks_client_backpressure (test_performance.PerformanceTests.test_auto_render_scale_tracks_client_backpressure) ... ok
+test_capture_worker_preserves_backend_error_detail (test_performance.PerformanceTests.test_capture_worker_preserves_backend_error_detail) ... ok
+test_frame_pump_keeps_latest_instead_of_queueing (test_performance.PerformanceTests.test_frame_pump_keeps_latest_instead_of_queueing) ... ok
+test_frame_rate_change_reaches_capture_backend (test_performance.PerformanceTests.test_frame_rate_change_reaches_capture_backend) ... ok
+test_identical_capture_digest_reuses_rendered_state (test_performance.PerformanceTests.test_identical_capture_digest_reuses_rendered_state) ... ok
+test_pending_latency_probe_caps_refresh_rate (test_performance.PerformanceTests.test_pending_latency_probe_caps_refresh_rate) ... ok
+test_render_scale_accepts_smooth_lower_resolution_mode (test_performance.PerformanceTests.test_render_scale_accepts_smooth_lower_resolution_mode) ... ok
+test_resize_discards_in_flight_old_geometry (test_performance.PerformanceTests.test_resize_discards_in_flight_old_geometry) ... ok
+test_sharp_mode_defaults_to_60_fps_with_bounds (test_performance.PerformanceTests.test_sharp_mode_defaults_to_60_fps_with_bounds) ... ok
+test_terminal_backpressure_caps_refresh_rate (test_performance.PerformanceTests.test_terminal_backpressure_caps_refresh_rate) ... ok
+test_aspect_ratio_letterboxes (test_render.RenderTests.test_aspect_ratio_letterboxes) ... ok
+test_color_fallbacks (test_render.RenderTests.test_color_fallbacks) ... ok
+test_delta_writer_emits_one_glyph_per_change (test_render.RenderTests.test_delta_writer_emits_one_glyph_per_change) ... ok
+test_device_header_and_terminal_title_are_restored (test_render.RenderTests.test_device_header_and_terminal_title_are_restored) ... ok
+test_full_delta_and_unchanged (test_render.RenderTests.test_full_delta_and_unchanged) ... ok
+test_kitty_graphics_are_wrapped_for_tmux (test_render.RenderTests.test_kitty_graphics_are_wrapped_for_tmux) ... ok
+test_kitty_probe_and_bounded_pixel_geometry (test_render.RenderTests.test_kitty_probe_and_bounded_pixel_geometry) ... ok
+test_kitty_renderer_never_upscales_the_remote_desktop (test_render.RenderTests.test_kitty_renderer_never_upscales_the_remote_desktop) ... ok
+test_kitty_renderer_uses_client_fps_friendly_tile_count (test_render.RenderTests.test_kitty_renderer_uses_client_fps_friendly_tile_count) ... ok
+test_kitty_renderer_uses_terminal_pixels_and_tile_deltas (test_render.RenderTests.test_kitty_renderer_uses_terminal_pixels_and_tile_deltas) ... ok
+test_kitty_writer_emits_chunked_paletted_png (test_render.RenderTests.test_kitty_writer_emits_chunked_paletted_png) ... ok
+test_kitty_writer_uses_one_canvas_for_large_updates (test_render.RenderTests.test_kitty_writer_uses_one_canvas_for_large_updates) ... ok
+test_large_change_becomes_full (test_render.RenderTests.test_large_change_becomes_full) ... ok
+test_render_scale_reduces_capture_targets_without_changing_desktop_mapping (test_render.RenderTests.test_render_scale_reduces_capture_targets_without_changing_desktop_mapping) ... ok
+test_renderer_accepts_prescaled_frame_with_desktop_coordinates (test_render.RenderTests.test_renderer_accepts_prescaled_frame_with_desktop_coordinates) ... ok
+test_renderers_reserve_the_device_header_row (test_render.RenderTests.test_renderers_reserve_the_device_header_row) ... ok
+test_resize_forces_full (test_render.RenderTests.test_resize_forces_full) ... ok
+test_terminal_capability_detection (test_render.RenderTests.test_terminal_capability_detection) ... ok
+
+----------------------------------------------------------------------
+Ran 105 tests in 4.484s
+
+OK (skipped=5)

@@ -1,7 +1,5 @@
-param(
-    [switch]$Tailscale,
-    [switch]$NoTailscale
-)
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
@@ -22,21 +20,9 @@ function Test-Administrator {
 if (-not $IsWindows -and $env:OS -ne "Windows_NT") {
     throw "install.ps1 supports Windows; use install.sh on Linux or macOS"
 }
-if ($Tailscale -and $NoTailscale) {
-    throw "choose either -Tailscale or -NoTailscale"
-}
-
 if (-not (Test-Administrator)) {
     Write-Step "requesting Administrator permission..."
-    $ForwardedSwitches = if ($Tailscale) {
-        " -Tailscale"
-    } elseif ($NoTailscale) {
-        " -NoTailscale"
-    } else {
-        ""
-    }
-    $ElevatedCommand = "& ([scriptblock]::Create((Invoke-RestMethod '$InstallerUrl')))" + `
-        $ForwardedSwitches
+    $ElevatedCommand = "& ([scriptblock]::Create((Invoke-RestMethod '$InstallerUrl')))"
     $Arguments = @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
@@ -52,45 +38,6 @@ $TemporaryDirectory = Join-Path ([IO.Path]::GetTempPath()) ("sshdesk-install-" +
 New-Item -ItemType Directory -Path $TemporaryDirectory | Out-Null
 
 try {
-    $Python = $null
-    foreach ($Candidate in @("py.exe", "python.exe")) {
-        $Found = Get-Command $Candidate -ErrorAction SilentlyContinue
-        if ($Found) {
-            if ($Candidate -eq "py.exe") {
-                & $Found.Source -3 -c "import sys; assert sys.version_info >= (3, 10)" 2>$null
-            } else {
-                & $Found.Source -c "import sys; assert sys.version_info >= (3, 10)" 2>$null
-            }
-            if ($LASTEXITCODE -eq 0) {
-                $Python = $Found.Source
-                break
-            }
-        }
-    }
-    if (-not $Python) {
-        $Winget = Get-Command winget.exe -ErrorAction SilentlyContinue
-        if (-not $Winget) {
-            throw "Python 3 is missing and winget is unavailable; install Python 3.10+ and rerun"
-        }
-        Write-Step "installing Python 3..."
-        & $Winget.Source install --id Python.Python.3.13 --exact --source winget `
-            --accept-package-agreements --accept-source-agreements --silent
-        if ($LASTEXITCODE -ne 0) {
-            throw "winget could not install Python"
-        }
-        $Python = Get-ChildItem "$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe" `
-            -ErrorAction SilentlyContinue | Sort-Object FullName -Descending |
-            Select-Object -First 1 -ExpandProperty FullName
-        if (-not $Python) {
-            $Python = Get-ChildItem "$env:ProgramFiles\Python3*\python.exe" `
-                -ErrorAction SilentlyContinue | Sort-Object FullName -Descending |
-                Select-Object -First 1 -ExpandProperty FullName
-        }
-        if (-not $Python) {
-            throw "Python installed, but python.exe could not be found"
-        }
-    }
-
     $Capability = Get-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0"
     if ($Capability.State -ne "Installed") {
         Write-Step "installing the Windows OpenSSH server..."
@@ -111,7 +58,6 @@ try {
     $InstallRoot = Join-Path $env:ProgramData "SSHDESK"
     Write-Step "installing the application..."
     & (Join-Path $ProjectDirectory.FullName "scripts\install-windows.ps1") `
-        -PythonExecutable $Python `
         -SourceDirectory $ProjectDirectory.FullName `
         -InstallRootOverride $InstallRoot
 
@@ -126,7 +72,7 @@ try {
         throw "Windows OpenSSH installed without its expected configuration files"
     }
 
-    $ForcedCommand = (Join-Path $InstallRoot "bin\sshdesk-forced-command.cmd").Replace("\", "/")
+    $ForcedCommand = (Join-Path $InstallRoot "bin\sshdesk-forced-command.exe").Replace("\", "/")
     $BeginMarker = "# BEGIN SSHDESK $Account"
     $EndMarker = "# END SSHDESK $Account"
     $OriginalConfig = [IO.File]::ReadAllText($SshConfig)
@@ -136,7 +82,7 @@ try {
     $Block = @"
 $BeginMarker
 Match User $Account
-    ForceCommand $ForcedCommand
+    ForceCommand "$ForcedCommand"
     PermitTTY yes
     DisableForwarding yes
     X11Forwarding no
@@ -169,31 +115,6 @@ $EndMarker
     Write-Step "installed and started OpenSSH. Connect with: ssh $Account@<server-address>"
     Write-Warning "Windows OpenSSH normally runs in Session 0. Desktop capture from a forced command is experimental and must reach the logged-in interactive desktop."
 
-    $InstallTailscale = $Tailscale
-    if (-not $Tailscale -and -not $NoTailscale) {
-        $Answer = Read-Host "Install and start Tailscale now? [y/N]"
-        $InstallTailscale = $Answer -match "^(?i:y|yes)$"
-    }
-    if ($InstallTailscale) {
-        $Winget = Get-Command winget.exe -ErrorAction SilentlyContinue
-        if (-not $Winget) {
-            throw "Tailscale installation needs winget on Windows"
-        }
-        Write-Step "installing Tailscale..."
-        & $Winget.Source install --id Tailscale.Tailscale --exact --source winget `
-            --accept-package-agreements --accept-source-agreements --silent
-        if ($LASTEXITCODE -ne 0) {
-            throw "winget could not install Tailscale"
-        }
-        Start-Service Tailscale -ErrorAction SilentlyContinue
-        $TailscaleExe = Join-Path $env:ProgramFiles "Tailscale\tailscale.exe"
-        if (Test-Path $TailscaleExe) {
-            Write-Step "starting Tailscale login..."
-            & $TailscaleExe up
-        } else {
-            Start-Process "https://tailscale.com/download/windows"
-        }
-    }
     Write-Step "installation complete."
 } finally {
     Remove-Item -LiteralPath $TemporaryDirectory -Recurse -Force -ErrorAction SilentlyContinue

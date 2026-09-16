@@ -13,7 +13,7 @@ OpenSSH sshd ── ForceCommand ── sshdesk-server
                                   │   ├── X11Capture
                                   │   │   ├── FFmpeg/XCB
                                   │   │   ├── MIT-SHM fallback
-                                  │   │   └── Pillow/XCB fallback
+                                  │   │   └── XGetImage fallback
                                   │   ├── GnomeScreenCastCapture
                                   │   │   └── Mutter/PipeWire/GStreamer
                                   │   ├── WaylandCapture
@@ -45,26 +45,23 @@ thread. A capable terminal receives palette-compressed PNG tiles through the Kit
 graphics protocol; other terminals receive colored half-block cells. The session
 keeps rendered state in both modes. A changed frame becomes either a full redraw
 or a tile/cell delta; an unchanged frame produces no frame output.
-The preferred X11 backend continuously drains an FFmpeg/XCB stream already
-scaled to the renderer's exact target. An independent capture worker keeps only
-one latest frame, so rendering or SSH backpressure drops intermediate work
-instead of queuing stale frames. MIT-SHM with native OpenCV scaling and
-Pillow/XCB remain automatic fallbacks. Every backend preserves full-desktop
-coordinates for input. A small capture-level fingerprint lets identical frames
-reuse the previous rendered state without rebuilding terminal cells or tiles.
-GNOME follows the same persistent-stream model: Mutter publishes a PipeWire
-node once per session, GStreamer continuously drains and scales it, and input
-is sent through the linked Mutter RemoteDesktop object. Terminal resize only
-rebuilds the local scaling pipeline, not the compositor session.
-Input parsing and X11 injection run in a dedicated thread so slow terminal output
-does not starve keyboard or mouse events. The capture rate targets 60 FPS in
-sharp mode or 30 FPS in ANSI mode and stays fresh at that rate. Presentation
-backs off to 30 FPS during light activity and 2 FPS while idle, but input wakes
-it immediately without restarting capture. The active limit can be configured
-from 1 through 120 FPS. In automatic scale mode, terminal write time and reply
-latency can lower the render scale to reduce the target capture size until the
-client catches up. A fixed render scale from 0.25 through 1.0 can force the same
-fewer-pixels-per-frame tradeoff.
+The preferred X11 backend reads a persistent FFmpeg/XCB stream. An independent
+capture worker publishes only one latest frame; replacing it frees the old
+frame. Resize generations reject in-flight frames from an earlier geometry.
+Native MIT-SHM and XGetImage provide automatic fallbacks. Owned RGB buffers
+carry both image dimensions and desktop dimensions, so local prescaling keeps
+input coordinates intact. Frame fingerprints suppress unchanged output.
+
+GNOME binds GLib/GIO and GStreamer C APIs. Mutter publishes a PipeWire node
+once per session, GStreamer drains it through a one-buffer appsink, and input
+uses the linked RemoteDesktop object. A target size change rebuilds the local
+pipeline without recreating the compositor session.
+
+Input parsing/injection runs in its own thread. Output backpressure adjusts
+presentation and capture intervals and, unless fixed by the user, render scale.
+The default maximum is 60 FPS for Kitty and 30 FPS for ANSI. Explicit limits
+range from 0.5 to 120 FPS and scale from 0.25 to 1. libpng/zlib are linked
+statically for screenshot and Kitty PNG encoding; no interpreter is used.
 
 There is deliberately no SSHDESK application transport or client binary. An
 unmodified SSH client carries one PTY byte stream. Kitty graphics, ANSI/UTF-8,
@@ -103,3 +100,36 @@ OpenSSH ForceCommand dispatcher
     |-- sshdesk-agent ... -------------- restricted agent parser
     `-- shell -------------------------- authenticated account login shell
 ```
+
+## Resizing
+
+The CPU resizer precomputes separable bilinear filter coefficients and walks
+rows contiguously. Its fixed-point SIMD sums use a conservative error bound;
+channels near a rounding boundary are re-evaluated with the original floating
+arithmetic. This retains exact pixels while avoiding repeated coefficient work.
+
+On macOS, large downscales use an optional Metal compute pipeline. The Zig
+controller serializes a reusable device/queue and shared buffers through a
+small ARC-managed Objective-C bridge. Each GPU pass produces RGB plus rounding
+flags; Zig corrects flagged channels before the next pass. Dispatch, upload,
+synchronization, readback, and correction are included in the retained timings.
+A failed or unavailable GPU falls back to the fixed-point SIMD CPU resizer.
+GPU-only staging allocation failures also fall back; each failed pass is fully
+recomputed on the CPU, without further allocation. Resources are released after
+session workers join. Linux and Windows use a dynamically loaded Vulkan 1.0
+compute backend with the same fixed-point filter. Its embedded SPIR-V uses
+32-bit storage buffers, avoiding optional 8-bit storage features. Reusable
+host-visible coherent buffers carry packed RGB input and RGB/rounding output.
+Submission makes host writes visible; a compute-to-host barrier and fence
+complete before CPU readback or buffer reuse. Failed device/queue commands
+disable further Vulkan dispatch until context teardown.
+
+`SSHDESK_RESIZE=auto` selects Metal on macOS and hardware Vulkan devices on
+Linux/Windows for large downscales. `cpu` disables GPU resizing, while `metal`
+and `vulkan` request their platform's backend explicitly. Explicit Vulkan
+also allows software devices for tests; automatic mode excludes them. Unit
+tests use CPU unless a GPU backend is explicitly requested, then assert that
+every filter pass actually dispatched successfully. Native tests cover exact
+pixels, concurrent calls, teardown/recreation, and GPU-to-SIMD fallback.
+The shader source and generated binary are checked with pinned glslang 12.0.0
+and SPIR-V validation; normal builds embed the binary without invoking a compiler.

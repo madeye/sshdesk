@@ -1,0 +1,57 @@
+native/gpu/resize.comp
+1/48 root.test_0...OK
+2/48 frame.test.owned frames, stable fingerprints, bilinear pixels and invalid dimensions...OK
+3/48 frame.test.frame allocation failures release ownership...OK
+4/48 frame.test.downsampling filters alternating pixels instead of aliasing...OK
+5/48 frame.test.optimized resize is pixel-exact against the scalar reference...OK
+6/48 frame.test.requested GPU backend matches scalar pixels without silent fallback...OK
+7/48 frame.test.GPU buffers remain isolated across concurrent resize calls...OK
+8/48 frame.test.failed GPU passes fall back to exact SIMD CPU pixels...OK
+9/48 frame.test.GPU staging allocation failures fall back without further allocation...OK
+10/48 frame.test.GPU context can be destroyed and recreated...OK
+11/48 routing.test.exact SSH selectors and command injection rejection...OK
+12/48 routing.test.quoted Unicode and allocation failure cleanup...OK
+13/48 png.test.PNG roundtrip verifies decoded RGB pixels, malformed input...OK
+14/48 png.test.PNG encode and decode release ownership on allocation failure...OK
+15/48 render.test.viewport margins, small terminals, scale and mouse mapping...OK
+16/48 render.test.full, delta, static suppression, colors and allocation failures...OK
+17/48 render.test.large changes and terminal resize force full redraws; deltas emit one glyph...OK
+18/48 input.test.fragmented UTF8, escape timeout, detach, modifiers and mouse...OK
+19/48 input.test.input bound and special key names...OK
+20/48 input.test.key mapping, SGR scroll and legacy release preserve terminal semantics...OK
+21/48 input.test.legacy mouse, modified function keys, cursor replies and Alt remain distinct...OK
+22/48 input.test.mouse motion coalescing preserves clicks and the final motion...OK
+23/48 process.test.subprocess output bound, timeout, and reaping closed pipes...OK
+24/48 process.test.timeouts escalate past a helper that ignores SIGTERM...OK
+25/48 process.test.helper descendants cannot retain pipes and block input-writer cleanup...OK
+26/48 platform.test.Xvfb native capture and XTest input integration...SKIP
+27/48 platform.test.platform selection respects explicit X11 and Wayland compositor...OK
+28/48 agent.test.agent malformed requests, bounds, Unicode, response IDs and recovery...OK
+29/48 agent.test.agent screenshot reports desktop dimensions and decoded image dimensions...OK
+30/48 agent.test.JSON actions clamp repetitions and reject non-finite values and oversized Unicode text...OK
+31/48 agent.test.agent JSON response allocation failures release parsed values...OK
+32/48 cli.test.removed flags and command allowlist fail closed...OK
+33/48 cli.test.equals options, positional Unicode and benchmark argument bounds...OK
+34/48 session.test.single latest frame slot, backpressure and resize generation rejection...OK
+35/48 kitty.test.fragmented Kitty probe, pixel geometry and tmux escaping...OK
+36/48 kitty.test.Kitty PNG tiles, static suppression and changed tile update...OK
+37/48 kitty.test.Kitty canvas decodes to bounded paletted pixels and large updates replace canvas...OK
+38/48 kitty.test.prescaled images retain desktop coordinates in both renderers...OK
+39/48 kitty.test.pixel mouse mapping uses exact pixel boundaries and cursor reuses its image...OK
+40/48 capabilities.test.capability overrides and adaptive backpressure bounds...OK
+41/48 capabilities.test.reference adaptive scale and terminal backpressure thresholds...OK
+42/48 config.test.configuration allowlist never evaluates values or accepts unsafe accounts...OK
+43/48 stats.test.statistics overlay respects small terminal dimensions...OK
+44/48 platform.gnome.test.GNOME native variants combine scaled monitors into complete desktop area...OK
+45/48 platform.gnome.test.GNOME linked input clamps coordinates and resize preserves compositor sessions...OK
+46/48 platform.macos.test.CoreGraphics capture keeps RGB pixels and converts Retina image to logical coordinates...OK
+47/48 platform.macos.test.macOS permission checks use ApplicationServices and identify installed executable...OK
+48/48 gpu.test.backend selection honors CPU override and platform availability...OK
+47 passed; 1 skipped; 0 failed.
+test_software_vulkan_requires_explicit_selection (tests.test_native_integration.NativeContracts.test_software_vulkan_requires_explicit_selection) ... ok
+test_missing_vulkan_driver_falls_back_to_identical_cpu_output (tests.test_native_integration.NativeContracts.test_missing_vulkan_driver_falls_back_to_identical_cpu_output) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.528s
+
+OK

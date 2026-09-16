@@ -1,0 +1,28 @@
+#version 450
+// Packed 32-bit buffers require no optional 8-bit storage features.
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer Source { uint source[]; };
+layout(set = 0, binding = 1, std430) readonly buffer Spans { uvec4 spans[]; };
+layout(set = 0, binding = 2, std430) readonly buffer Weights { uint weights[]; };
+layout(set = 0, binding = 3, std430) writeonly buffer Output { uint pixels[]; };
+layout(push_constant) uniform Geometry { uint source_width, width, height, vertical; } g;
+uint byte_at(uint i) { return (source[i / 4] >> (8 * (i % 4))) & 255; }
+void main() {
+    uvec2 p = gl_GlobalInvocationID.xy;
+    if (p.x >= g.width || p.y >= g.height) return;
+    uvec4 span = spans[g.vertical != 0 ? p.y : p.x];
+    uvec3 sum = uvec3(0);
+    for (uint i = 0; i < span.y; ++i) {
+        uint index = g.vertical != 0 ? (span.x + i) * g.source_width + p.x
+                                     : p.y * g.source_width + span.x + i;
+        uint b = 3 * index;
+        sum += uvec3(byte_at(b), byte_at(b + 1), byte_at(b + 2)) * weights[span.z + i];
+    }
+    const uint unit = 1u << 22;
+    uvec3 fraction = sum & (unit - 1);
+    uvec3 distance = max(fraction, uvec3(unit / 2)) - min(fraction, uvec3(unit / 2));
+    uint flags = uint(distance.x <= span.w) | (uint(distance.y <= span.w) << 1)
+                 | (uint(distance.z <= span.w) << 2);
+    uvec3 rgb = (sum + unit / 2) >> 22;
+    pixels[p.y * g.width + p.x] = rgb.x | (rgb.y << 8) | (rgb.z << 16) | (flags << 24);
+}

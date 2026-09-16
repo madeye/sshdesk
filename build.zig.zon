@@ -1,0 +1,12 @@
+.{
+    .name = .sshdesk,
+    .version = "0.4.5",
+    .fingerprint = 0x4032ad515ef362d9,
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .vulkan_headers = .{ .url = "https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/refs/tags/vulkan-sdk-1.4.328.1", .hash = "N-V-__8AABOz_AEglqwsMBpjAnOSgdNkuJxvSMGAlGOQr-l3" },
+        .libpng = .{ .url = "https://codeload.github.com/pnggroup/libpng/tar.gz/refs/tags/v1.6.58", .hash = "N-V-__8AAJexYAClrDiJ2R-eT-rfMNK2Qd3--2FRhY7e5nvn" },
+        .zlib = .{ .url = "https://zlib.net/zlib-1.3.2.tar.gz", .hash = "N-V-__8AAJ2cNgAgfBtAw33Bxfu1IWISDeKKSr3DAqoAysIJ" },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "native", "LICENSE" },
+}

@@ -1,0 +1,31 @@
+test_bootstrap_has_valid_shell_syntax_and_help (test_installer.InstallerTests.test_bootstrap_has_valid_shell_syntax_and_help) ... ok
+test_removed_network_options_are_unknown (test_installer.InstallerTests.test_removed_network_options_are_unknown) ... ok
+test_wayland_dependencies_are_installed_and_checked_before_openssh (test_installer.InstallerTests.test_wayland_dependencies_are_installed_and_checked_before_openssh) ... ok
+test_installers_build_native_commands_without_python_setup (test_installer.NativeBuildTests.test_installers_build_native_commands_without_python_setup) ... ok
+test_pinned_native_build_and_dependency_licenses (test_installer.NativeBuildTests.test_pinned_native_build_and_dependency_licenses) ... ok
+test_windows_bootstrap_downloads_and_configures (test_installer.WindowsInstallerTests.test_windows_bootstrap_downloads_and_configures) ... ok
+test_agent_interrupt_restores_session_resources (test_native_integration.NativeContracts.test_agent_interrupt_restores_session_resources) ... ok
+test_bounded_json_session_recovers_and_quits (test_native_integration.NativeContracts.test_bounded_json_session_recovers_and_quits) ... ok
+test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child (test_native_integration.NativeContracts.test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child) ... ok
+test_invalid_options_are_rejected_before_capture (test_native_integration.NativeContracts.test_invalid_options_are_rejected_before_capture) ... ok
+test_missing_vulkan_driver_falls_back_to_identical_cpu_output (test_native_integration.NativeContracts.test_missing_vulkan_driver_falls_back_to_identical_cpu_output) ... ok
+test_nine_native_commands_and_help (test_native_integration.NativeContracts.test_nine_native_commands_and_help) ... ok
+test_non_pty_and_exact_forced_command_allowlist (test_native_integration.NativeContracts.test_non_pty_and_exact_forced_command_allowlist) ... ok
+test_remote_fixed_argv_unicode_timeout_and_response (test_native_integration.NativeContracts.test_remote_fixed_argv_unicode_timeout_and_response) ... ok
+test_software_vulkan_requires_explicit_selection (test_native_integration.NativeContracts.test_software_vulkan_requires_explicit_selection) ... skipped 'isolated lavapipe fixture'
+test_synthetic_check_and_color_fallbacks (test_native_integration.NativeContracts.test_synthetic_check_and_color_fallbacks) ... ok
+test_tmux_split_uses_fixed_argv (test_native_integration.NativeContracts.test_tmux_split_uses_fixed_argv) ... ok
+test_wayland_native_agent_argv_and_uppercase_modifiers (test_native_integration.NativeContracts.test_wayland_native_agent_argv_and_uppercase_modifiers) ... ok
+test_detach_resize_and_restore (test_native_integration.NativePtyContracts.test_detach_resize_and_restore) ... ok
+test_input_stays_responsive_under_output_backpressure (test_native_integration.NativePtyContracts.test_input_stays_responsive_under_output_backpressure) ... ok
+test_kitty_probe_and_native_pixels (test_native_integration.NativePtyContracts.test_kitty_probe_and_native_pixels) ... ok
+test_shell_retains_authenticated_identity (test_native_integration.NativePtyContracts.test_shell_retains_authenticated_identity) ... ok
+test_signal_cleanup (test_native_integration.NativePtyContracts.test_signal_cleanup) ... ok
+test_terminal_restored_after_handled_failure (test_native_integration.NativePtyContracts.test_terminal_restored_after_handled_failure) ... ok
+test_shell_selector_uses_authenticated_account_without_login_flag (test_native_integration.NativeWindowsPtyContracts.test_shell_selector_uses_authenticated_account_without_login_flag) ... skipped 'native Windows ConPTY test'
+test_synthetic_session_resize_detach_and_utf8 (test_native_integration.NativeWindowsPtyContracts.test_synthetic_session_resize_detach_and_utf8) ... skipped 'native Windows ConPTY test'
+
+----------------------------------------------------------------------
+Ran 26 tests in 1.601s
+
+OK (skipped=3)

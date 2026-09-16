@@ -1,0 +1,7 @@
+{
+  "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "zig": "0.15.2",
+  "fixture_sha256": "590b3d69db251f868a87c28b1d90f5047ea81a9d140aa761671f85203f88749f",
+  "workload": "1920x1080 static RGB; 100x30 ANSI256; resize, render, diff, encode; 10 warmups + 100 measured; no terminal I/O or capture"
+}

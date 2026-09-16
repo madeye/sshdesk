@@ -1,0 +1,136 @@
+Capture backend: ffmpeg
+1/37 root.test_0...OK
+2/37 frame.test.owned frames, stable fingerprints, bilinear pixels and invalid dimensions...OK
+3/37 frame.test.frame allocation failures release ownership...OK
+4/37 frame.test.downsampling filters alternating pixels instead of aliasing...OK
+5/37 routing.test.exact SSH selectors and command injection rejection...OK
+6/37 routing.test.quoted Unicode and allocation failure cleanup...OK
+7/37 png.test.PNG roundtrip verifies decoded RGB pixels, malformed input...OK
+8/37 render.test.viewport margins, small terminals, scale and mouse mapping...OK
+9/37 render.test.full, delta, static suppression, colors and allocation failures...OK
+10/37 render.test.large changes and terminal resize force full redraws; deltas emit one glyph...OK
+11/37 input.test.fragmented UTF8, escape timeout, detach, modifiers and mouse...OK
+12/37 input.test.input bound and special key names...OK
+13/37 input.test.legacy mouse, modified function keys, cursor replies and Alt remain distinct...OK
+14/37 input.test.mouse motion coalescing preserves clicks and the final motion...OK
+15/37 process.test.subprocess output bound, timeout, and reaping closed pipes...OK
+16/37 process.test.timeouts escalate past a helper that ignores SIGTERM...OK
+17/37 process.test.helper descendants cannot retain pipes and block input-writer cleanup...OK
+18/37 platform.test.Xvfb native capture and XTest input integration...OK
+19/37 platform.test.platform selection respects explicit X11 and Wayland compositor...OK
+20/37 agent.test.agent malformed requests, bounds, Unicode, response IDs and recovery...OK
+21/37 agent.test.agent screenshot reports desktop dimensions and decoded image dimensions...OK
+22/37 agent.test.JSON actions clamp repetitions and reject non-finite values and oversized Unicode text...OK
+23/37 cli.test.removed flags and command allowlist fail closed...OK
+24/37 cli.test.equals options, positional Unicode and benchmark argument bounds...OK
+25/37 session.test.single latest frame slot, backpressure and resize generation rejection...OK
+26/37 kitty.test.fragmented Kitty probe, pixel geometry and tmux escaping...OK
+27/37 kitty.test.Kitty PNG tiles, static suppression and changed tile update...OK
+28/37 kitty.test.Kitty canvas decodes to bounded paletted pixels and large updates replace canvas...OK
+29/37 kitty.test.prescaled images retain desktop coordinates in both renderers...OK
+30/37 kitty.test.pixel mouse mapping uses exact pixel boundaries and cursor reuses its image...OK
+31/37 capabilities.test.capability overrides and adaptive backpressure bounds...OK
+32/37 config.test.configuration allowlist never evaluates values or accepts unsafe accounts...OK
+33/37 stats.test.statistics overlay respects small terminal dimensions...OK
+34/37 platform.gnome.test.GNOME native variants combine scaled monitors into complete desktop area...OK
+35/37 platform.gnome.test.GNOME linked input clamps coordinates and resize preserves compositor sessions...OK
+36/37 platform.macos.test.CoreGraphics capture keeps RGB pixels and converts Retina image to logical coordinates...OK
+37/37 platform.macos.test.macOS permission checks use ApplicationServices and identify installed executable...OK
+All 37 tests passed.
+Capture backend: xshm
+1/37 root.test_0...OK
+2/37 frame.test.owned frames, stable fingerprints, bilinear pixels and invalid dimensions...OK
+3/37 frame.test.frame allocation failures release ownership...OK
+4/37 frame.test.downsampling filters alternating pixels instead of aliasing...OK
+5/37 routing.test.exact SSH selectors and command injection rejection...OK
+6/37 routing.test.quoted Unicode and allocation failure cleanup...OK
+7/37 png.test.PNG roundtrip verifies decoded RGB pixels, malformed input...OK
+8/37 render.test.viewport margins, small terminals, scale and mouse mapping...OK
+9/37 render.test.full, delta, static suppression, colors and allocation failures...OK
+10/37 render.test.large changes and terminal resize force full redraws; deltas emit one glyph...OK
+11/37 input.test.fragmented UTF8, escape timeout, detach, modifiers and mouse...OK
+12/37 input.test.input bound and special key names...OK
+13/37 input.test.legacy mouse, modified function keys, cursor replies and Alt remain distinct...OK
+14/37 input.test.mouse motion coalescing preserves clicks and the final motion...OK
+15/37 process.test.subprocess output bound, timeout, and reaping closed pipes...OK
+16/37 process.test.timeouts escalate past a helper that ignores SIGTERM...OK
+17/37 process.test.helper descendants cannot retain pipes and block input-writer cleanup...OK
+18/37 platform.test.Xvfb native capture and XTest input integration...OK
+19/37 platform.test.platform selection respects explicit X11 and Wayland compositor...OK
+20/37 agent.test.agent malformed requests, bounds, Unicode, response IDs and recovery...OK
+21/37 agent.test.agent screenshot reports desktop dimensions and decoded image dimensions...OK
+22/37 agent.test.JSON actions clamp repetitions and reject non-finite values and oversized Unicode text...OK
+23/37 cli.test.removed flags and command allowlist fail closed...OK
+24/37 cli.test.equals options, positional Unicode and benchmark argument bounds...OK
+25/37 session.test.single latest frame slot, backpressure and resize generation rejection...OK
+26/37 kitty.test.fragmented Kitty probe, pixel geometry and tmux escaping...OK
+27/37 kitty.test.Kitty PNG tiles, static suppression and changed tile update...OK
+28/37 kitty.test.Kitty canvas decodes to bounded paletted pixels and large updates replace canvas...OK
+29/37 kitty.test.prescaled images retain desktop coordinates in both renderers...OK
+30/37 kitty.test.pixel mouse mapping uses exact pixel boundaries and cursor reuses its image...OK
+31/37 capabilities.test.capability overrides and adaptive backpressure bounds...OK
+32/37 config.test.configuration allowlist never evaluates values or accepts unsafe accounts...OK
+33/37 stats.test.statistics overlay respects small terminal dimensions...OK
+34/37 platform.gnome.test.GNOME native variants combine scaled monitors into complete desktop area...OK
+35/37 platform.gnome.test.GNOME linked input clamps coordinates and resize preserves compositor sessions...OK
+36/37 platform.macos.test.CoreGraphics capture keeps RGB pixels and converts Retina image to logical coordinates...OK
+37/37 platform.macos.test.macOS permission checks use ApplicationServices and identify installed executable...OK
+All 37 tests passed.
+Capture backend: x11
+1/37 root.test_0...OK
+2/37 frame.test.owned frames, stable fingerprints, bilinear pixels and invalid dimensions...OK
+3/37 frame.test.frame allocation failures release ownership...OK
+4/37 frame.test.downsampling filters alternating pixels instead of aliasing...OK
+5/37 routing.test.exact SSH selectors and command injection rejection...OK
+6/37 routing.test.quoted Unicode and allocation failure cleanup...OK
+7/37 png.test.PNG roundtrip verifies decoded RGB pixels, malformed input...OK
+8/37 render.test.viewport margins, small terminals, scale and mouse mapping...OK
+9/37 render.test.full, delta, static suppression, colors and allocation failures...OK
+10/37 render.test.large changes and terminal resize force full redraws; deltas emit one glyph...OK
+11/37 input.test.fragmented UTF8, escape timeout, detach, modifiers and mouse...OK
+12/37 input.test.input bound and special key names...OK
+13/37 input.test.legacy mouse, modified function keys, cursor replies and Alt remain distinct...OK
+14/37 input.test.mouse motion coalescing preserves clicks and the final motion...OK
+15/37 process.test.subprocess output bound, timeout, and reaping closed pipes...OK
+16/37 process.test.timeouts escalate past a helper that ignores SIGTERM...OK
+17/37 process.test.helper descendants cannot retain pipes and block input-writer cleanup...OK
+18/37 platform.test.Xvfb native capture and XTest input integration...OK
+19/37 platform.test.platform selection respects explicit X11 and Wayland compositor...OK
+20/37 agent.test.agent malformed requests, bounds, Unicode, response IDs and recovery...OK
+21/37 agent.test.agent screenshot reports desktop dimensions and decoded image dimensions...OK
+22/37 agent.test.JSON actions clamp repetitions and reject non-finite values and oversized Unicode text...OK
+23/37 cli.test.removed flags and command allowlist fail closed...OK
+24/37 cli.test.equals options, positional Unicode and benchmark argument bounds...OK
+25/37 session.test.single latest frame slot, backpressure and resize generation rejection...OK
+26/37 kitty.test.fragmented Kitty probe, pixel geometry and tmux escaping...OK
+27/37 kitty.test.Kitty PNG tiles, static suppression and changed tile update...OK
+28/37 kitty.test.Kitty canvas decodes to bounded paletted pixels and large updates replace canvas...OK
+29/37 kitty.test.prescaled images retain desktop coordinates in both renderers...OK
+30/37 kitty.test.pixel mouse mapping uses exact pixel boundaries and cursor reuses its image...OK
+31/37 capabilities.test.capability overrides and adaptive backpressure bounds...OK
+32/37 config.test.configuration allowlist never evaluates values or accepts unsafe accounts...OK
+33/37 stats.test.statistics overlay respects small terminal dimensions...OK
+34/37 platform.gnome.test.GNOME native variants combine scaled monitors into complete desktop area...OK
+35/37 platform.gnome.test.GNOME linked input clamps coordinates and resize preserves compositor sessions...OK
+36/37 platform.macos.test.CoreGraphics capture keeps RGB pixels and converts Retina image to logical coordinates...OK
+37/37 platform.macos.test.macOS permission checks use ApplicationServices and identify installed executable...OK
+All 37 tests passed.
+test_agent_interrupt_restores_session_resources (tests.test_native_integration.NativeContracts.test_agent_interrupt_restores_session_resources) ... ok
+test_bounded_json_session_recovers_and_quits (tests.test_native_integration.NativeContracts.test_bounded_json_session_recovers_and_quits) ... ok
+test_invalid_options_are_rejected_before_capture (tests.test_native_integration.NativeContracts.test_invalid_options_are_rejected_before_capture) ... ok
+test_nine_native_commands_and_help (tests.test_native_integration.NativeContracts.test_nine_native_commands_and_help) ... ok
+test_non_pty_and_exact_forced_command_allowlist (tests.test_native_integration.NativeContracts.test_non_pty_and_exact_forced_command_allowlist) ... ok
+test_remote_fixed_argv_unicode_timeout_and_response (tests.test_native_integration.NativeContracts.test_remote_fixed_argv_unicode_timeout_and_response) ... ok
+test_synthetic_check_and_color_fallbacks (tests.test_native_integration.NativeContracts.test_synthetic_check_and_color_fallbacks) ... ok
+test_tmux_split_uses_fixed_argv (tests.test_native_integration.NativeContracts.test_tmux_split_uses_fixed_argv) ... ok
+test_wayland_native_agent_argv_and_uppercase_modifiers (tests.test_native_integration.NativeContracts.test_wayland_native_agent_argv_and_uppercase_modifiers) ... ok
+test_detach_resize_and_restore (tests.test_native_integration.NativePtyContracts.test_detach_resize_and_restore) ... ok
+test_input_stays_responsive_under_output_backpressure (tests.test_native_integration.NativePtyContracts.test_input_stays_responsive_under_output_backpressure) ... ok
+test_kitty_probe_and_native_pixels (tests.test_native_integration.NativePtyContracts.test_kitty_probe_and_native_pixels) ... ok
+test_shell_retains_authenticated_identity (tests.test_native_integration.NativePtyContracts.test_shell_retains_authenticated_identity) ... ok
+test_signal_cleanup (tests.test_native_integration.NativePtyContracts.test_signal_cleanup) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 1.330s
+
+OK

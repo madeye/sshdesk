@@ -14,13 +14,13 @@ Linux is the primary supported host platform.
 
 ### X11
 
-`X11Capture` detects the desktop size and tries these implementations in order:
+The native X11 backend detects the desktop size and tries these implementations in order:
 
-1. a continuously drained FFmpeg/XCB process scaled to the current renderer;
-2. MIT-SHM current-frame capture, optionally scaled with OpenCV;
-3. Pillow/XCB current-frame capture.
+1. a persistent FFmpeg/XCB process with a bounded latest-frame reader;
+2. native MIT-SHM current-frame capture;
+3. native XGetImage current-frame capture.
 
-`X11Input` injects bounded XTest keyboard and mouse events and releases held
+XTest injects bounded XTest keyboard and mouse events and releases held
 state during cleanup. This path is desktop-environment and distribution neutral
 as long as the target is an accessible X11 session.
 
@@ -37,7 +37,7 @@ other clients. SSHDESK uses tools already designed for the active compositor:
 
 The graphical user's `WAYLAND_DISPLAY`, `XDG_RUNTIME_DIR`, desktop, and D-Bus
 environment must reach the forced command. The installer records these when it
-is run from that graphical session. On GNOME it installs PyGObject, GStreamer,
+is run from that graphical session. On GNOME it installs GLib/GIO, GStreamer,
 and the PipeWire plugin. Mutter provides capture and input inside the graphical
 user's existing D-Bus session, so no privileged helper or screenshot extension
 is used. The stream is opened once, compositor frames are drained continuously,
@@ -51,22 +51,21 @@ provide none of the listed capture interfaces need a backend adapter.
 
 ## macOS host
 
-`NativeCapture` uses Quartz `CGDisplayCreateImage` and `MacOSInput` uses Quartz
-event injection. Pillow's macOS `ImageGrab` path shells out to `screencapture`,
-which fails from OpenSSH (`could not create image from display`) even when the
-Python process already has Screen Recording permission. Quartz capture stays in
-that process, so SSH sessions work after TCC is granted. Newer PyObjC builds no
-longer export `AXIsProcessTrusted` on the `Quartz` module; input falls back to
-the ApplicationServices C API. Grant Screen Recording and Accessibility
-permission to the installed Python binary. A manually launched server in the
-logged-in Aqua session is supported; OpenSSH daemon access still depends on
-macOS TCC/session policy.
+The Zig backend dynamically binds CoreGraphics for `CGDisplayCreateImage` and
+event injection, and ApplicationServices for accessibility checks. Grant Screen
+Recording and Accessibility permission to the installed `sshdesk-server` and
+`sshdesk-agent` executables (and the native forced-command executable when it
+hosts those operations in-process). Capture stays in the native process.
+A manually launched server in the logged-in Aqua session is supported; OpenSSH
+daemon access still depends on macOS TCC/session policy.
 
 ## Windows host
 
-`NativeCapture` uses Pillow ImageGrab across virtual screens and
-`WindowsInput` uses `SendInput`. The terminal lifecycle enables and restores
+The native backend uses GDI BitBlt/GetDIBits across virtual screens and
+`SendInput`. The terminal lifecycle enables and restores
 Windows virtual-terminal console modes. The server must execute in the logged-in
 interactive desktop. Windows OpenSSH normally runs as a service in Session 0,
 which can isolate it from that desktop, so forced-command hosting is currently
 experimental.
+
+See [port validation status](zig-port.md) for compiled versus live-tested backends.

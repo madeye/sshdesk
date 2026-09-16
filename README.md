@@ -83,16 +83,13 @@ needed:
 & ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/rylena/sshdesk/main/scripts/install.ps1')))
 ```
 
-Both one-line entry points detect the OS, install missing Python/OpenSSH
+Both one-line entry points detect the OS, install missing Zig/OpenSSH
 prerequisites, install SSHDESK, validate graphical access and the forced-command
 configuration, and start the platform's OpenSSH service. On Wayland, the Linux
 installer detects GNOME, KDE Plasma, or wlroots. GNOME uses one persistent
 Mutter/PipeWire stream with compositor-native input; KDE and wlroots install a
 capture command and checksum-verified `ydotoold` helper. They support common Linux
-distributions, macOS, and Windows 10/11. The installer asks whether to install
-and start Tailscale only after SSHDESK and OpenSSH setup succeeds.
-Tailscale carries normal OpenSSH over the private tailnet; it does not replace
-OpenSSH or add a second SSH authentication mode.
+distributions, macOS, and Windows 10/11.
 
 > [!IMPORTANT]
 > Cross-platform installation does not remove OS security boundaries. macOS
@@ -108,20 +105,12 @@ OpenSSH or add a second SSH authentication mode.
 > for the machine. On Linux/macOS, use `--user USER` when automatic user
 > detection is wrong.
 
-For unattended installs, download the script and use `--tailscale` or
-`--no-tailscale`:
+For unattended installs, download the script and select the account:
 
 ```bash
 curl -fsSLo /tmp/sshdesk-install.sh \
   https://raw.githubusercontent.com/rylena/sshdesk/main/scripts/install.sh
-sh /tmp/sshdesk-install.sh --user alice --no-tailscale
-```
-
-Windows PowerShell accepts `-Tailscale` or `-NoTailscale` on the downloaded
-script block:
-
-```powershell
-& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/rylena/sshdesk/main/scripts/install.ps1'))) -NoTailscale
+sh /tmp/sshdesk-install.sh --user alice
 ```
 
 ### Repairing a Wayland installation
@@ -137,19 +126,19 @@ ordinary SSH command from the client.
 
 ### Manual installation
 
-SSHDESK's installer is distribution-independent. It needs Python 3.10+, a
-working Python `venv`, OpenSSH server, and the capture/input tools for the active
+SSHDESK's installer is distribution-independent. It needs a
+Zig 0.15.2 compiler, OpenSSH server, and the capture/input tools for the active
 display stack:
 
 | Linux session | Capture | Input |
 |---|---|---|
-| X11, any desktop | FFmpeg/XCB, MIT-SHM, or Pillow/XCB | XTest |
+| X11, any desktop | FFmpeg/XCB, MIT-SHM, or XGetImage | XTest |
 | wlroots (Sway, Hyprland, etc.) | `grim` | `ydotool` + `ydotoold` |
 | GNOME Wayland | persistent Mutter + PipeWire/GStreamer | Mutter RemoteDesktop API |
 | KDE Plasma Wayland | `spectacle` | `ydotool` + `ydotoold` |
 
 The one-line installer handles these dependencies automatically. For a manual
-installation, GNOME needs PyGObject, GStreamer base introspection, and the
+installation, GNOME needs GLib/GIO, GStreamer and its appsink library, and the
 GStreamer PipeWire plugin. Other Wayland desktops need their listed capture
 command and ydotool 1.0.4 or newer. FFmpeg and NumPy/OpenCV are X11 acceleration
 paths. Non-GNOME Wayland input requires `ydotoold` access to `/dev/uinput`; do
@@ -315,19 +304,36 @@ SSHDESK_UNICODE=auto
 SSHDESK_X11_CAPTURE=auto
 SSHDESK_MAX_FPS=auto
 SSHDESK_SCALE=auto
+SSHDESK_RESIZE=auto
 ```
 
 `SSHDESK_RENDER=kitty` requires sharp graphics; `ansi` forces the universal
 fallback. `SSHDESK_X11_CAPTURE=auto` tries continuously drained FFmpeg/XCB,
-then MIT-SHM, then Pillow/XCB. `SSHDESK_MAX_FPS` accepts 1–120.
+then MIT-SHM, then XGetImage. `SSHDESK_MAX_FPS` accepts 1–120.
 `SSHDESK_SCALE=auto` dynamically reduces detail when the client terminal falls
 behind. Fixed values from 0.25–1.0, such as 0.75, send fewer pixels all the time
 for smoother sessions on slower clients or networks.
 
+`SSHDESK_RESIZE=auto` uses GPU compute for downscaling images with at least
+262,144 pixels: Metal on macOS, or a hardware Vulkan device on Linux/Windows.
+Smaller images use the SIMD CPU resizer. GPU initialization, execution, or
+staging allocation failure also falls back to SIMD CPU. `cpu` disables GPU
+resizing; `metal` (macOS) and `vulkan` (Linux/Windows) request it for all sizes.
+All paths preserve the original filtered pixels, including rounding at edges.
+
+Vulkan requires a Vulkan 1.0-capable graphics driver and loader (`libvulkan.so.1`
+on Linux, or the graphics driver's `vulkan-1.dll` on Windows). There is no
+Vulkan SDK or shader compiler requirement for building or running SSHDESK.
+For Debian/Ubuntu, install `libvulkan1` plus the appropriate GPU driver;
+`mesa-vulkan-drivers` supports compatible Mesa hardware. Automatic mode excludes
+CPU Vulkan implementations. Explicit `vulkan` mode also permits software drivers
+such as lavapipe for validation; that is not GPU acceleration. Use `cpu` if
+GPU transfer overhead is slower on your hardware.
+
 ## macOS and Windows host details
 
-Linux is the primary, fully integrated OpenSSH host. Native Pillow capture plus
-Quartz input on macOS and SendInput on Windows are available for development and
+Linux is the primary, fully integrated OpenSSH host. CoreGraphics capture and
+Quartz input on macOS, and GDI capture with SendInput on Windows are available for development and
 manually launched sessions. The repository-local commands below are useful for
 development; most users should use the one-line installers above:
 
@@ -337,7 +343,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install-windows.ps1
 ```
 
 macOS requires Screen Recording and Accessibility permission for the installed
-Python process. Windows hosting must execute inside the logged-in interactive
+native executable. Windows hosting must execute inside the logged-in interactive
 desktop; the normal Windows OpenSSH service may be isolated in Session 0, so
 forced-command hosting there is experimental. Linux/macOS/Windows terminals are
 all supported as clients because the visual protocol remains standard terminal
@@ -347,26 +353,35 @@ See [platform support](docs/platforms.md) for exact backend behavior.
 
 ## Development, tests, and benchmark
 
-```bash
-python3 -m venv .venv --system-site-packages
-. .venv/bin/activate
-python -m pip install -e '.[fast,dev]'
-
-sshdesk-server --capture synthetic --no-input
-python -m unittest discover -s tests -v
-ruff check src tests
-```
-
-Benchmark exact rendered terminal bytes:
+Build the nine native commands with [Zig 0.15.2](https://ziglang.org/documentation/0.15.2/):
 
 ```bash
-sshdesk-bench --duration 60 --columns 100 --rows 30 --color 256
+scripts/with-zig-sdk.sh zig build -Doptimize=ReleaseSafe
+zig fmt --check build.zig native
+scripts/with-zig-sdk.sh zig build test
+for script in scripts/*.sh; do sh -n "$script"; done
+zig-out/bin/sshdesk-server --capture synthetic --no-input
+zig-out/bin/sshdesk-bench --duration 60 --columns 100 --rows 30 --color 256
 ```
 
-Python keeps platform integration and iteration straightforward today. Capture,
-rendering, input, session management, and terminal output are separate modules,
-so performance-critical pieces can move to Rust later without changing the
-OpenSSH user experience.
+On Windows use `zig build` directly. The SDK wrapper selects an already installed
+compatible macOS SDK for Zig 0.15.2; it does not change `xcode-select`. Set
+`SSHDESK_MACOS_SDK` if automatic selection is unavailable. libpng and zlib are
+pinned and compiled into the executables. Other backend libraries are loaded
+only when selected. Installation and native commands do not use Python.
+
+See [port validation](docs/zig-port.md) and the [test migration ledger](docs/test-migration.md)
+for coverage and live-platform limitations. Native executable integration tests use only Python's standard library as a
+development harness:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+Raw matching-workload benchmark results are under
+[`artifacts/zig-port/benchmark`](artifacts/zig-port/benchmark). They include
+warmups, all measured samples, and a reproducible fixture definition. A language
+change alone is not evidence of a speedup.
 
 ## Documentation
 

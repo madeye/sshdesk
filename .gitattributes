@@ -1,0 +1,12 @@
+* text=auto
+*.zig text eol=lf
+*.zon text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.bin binary
+*.m text eol=lf
+*.metal text eol=lf
+
+*.c text eol=lf
+*.comp text eol=lf
+*.spv binary
