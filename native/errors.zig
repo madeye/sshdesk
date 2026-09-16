@@ -1,0 +1,32 @@
+/// Stable public diagnostics; internal error tags remain useful in CLI logs.
+pub fn describe(err: anyerror) []const u8 {
+    return switch (err) {
+        error.RequestMustBeJsonObject => "request must be a JSON object",
+        error.UnknownAction => "unknown action",
+        error.CoordinateOutsideSupportedRange => "coordinate is outside the supported range",
+        error.TextTooLong => "text is limited to 16384 characters",
+        error.UnknownKey => "unknown key",
+        error.UnknownOption => "unknown option",
+        error.InteractiveSshPtyRequired => "SSHDESK requires an interactive SSH terminal (PTY).",
+        error.AnsiTerminalRequired => "Set TERM to an ANSI-capable terminal; dumb and unknown terminals are unsupported.",
+        error.GrantAccessibilityPermissionToInstalledExecutable => "Grant Accessibility permission to the installed SSHDESK executable in System Settings.",
+        error.GrantScreenRecordingPermissionToInstalledExecutable => "Grant Screen Recording permission to the installed SSHDESK executable in System Settings.",
+        error.DesktopCaptureFailedCheckScreenRecordingPermission => "CoreGraphics could not capture the display; check Screen Recording permission for the installed executable.",
+        error.InstallLibX11 => "Install the libX11 runtime library for X11 capture.",
+        error.InstallLibXtst => "Install the libXtst runtime library for XTest input.",
+        error.InstallFfmpegWithX11grab => "Install FFmpeg with x11grab support or select SSHDESK_X11_CAPTURE=xshm.",
+        error.InstallGlibGioGstreamerAndPipewirePlugin => "Install GLib/GIO, GStreamer, the appsink library, and the PipeWire GStreamer plugin for GNOME capture.",
+        error.InstallGstreamerPipewirePlugin => "Install the PipeWire GStreamer plugin (pipewiresrc).",
+        error.InstallGrimForWaylandCapture => "Install grim for wlroots Wayland capture.",
+        error.InstallSpectacleForKdeCapture => "Install spectacle for KDE Plasma capture.",
+        error.InstallYdotoolAndStartYdotoold => "Install ydotool and start ydotoold for this desktop account.",
+        error.CheckYdotooldSocketAndUinputPermissions => "Check the ydotoold socket ownership and /dev/uinput permissions.",
+        error.SetDisplayOrWaylandDisplay => "Set DISPLAY or WAYLAND_DISPLAY for the active graphical session.",
+        error.SetDisplayAndXauthorityForDesktopOwner => "Set DISPLAY and XAUTHORITY for the desktop owner and verify access to its X11 session.",
+        error.ConnectToDesktopOwnerSessionBus => "Set DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR from the desktop owner's session.",
+        error.MutterDbusCallFailedCheckDesktopSessionPermissions => "Mutter rejected the D-Bus call; check the graphical session's permissions and RemoteDesktop/ScreenCast availability.",
+        error.RunInLoggedInInteractiveWindowsSessionNotSessionZero => "Run SSHDESK in the logged-in interactive Windows session; the OpenSSH service in Session 0 cannot access that desktop.",
+        error.ChildTimedOut => "helper process timed out",
+        else => @errorName(err),
+    };
+}

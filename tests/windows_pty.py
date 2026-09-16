@@ -83,6 +83,10 @@ class Console:
                                                     c.sizeof(w.HANDLE), None, None))
             startup = StartupEx()
             startup.startup.cb = c.sizeof(StartupEx)
+            # Explicit null standard handles let ConPTY supply its console handles.
+            # Otherwise Windows duplicates the CI runner's redirected pipes:
+            # https://github.com/microsoft/terminal/discussions/15814
+            startup.startup.flags = 0x100  # STARTF_USESTDHANDLES
             startup.attributes = c.cast(self.attributes, pointer)
             command = c.create_unicode_buffer(subprocess.list2cmdline(argv))
             self.reader = threading.Thread(target=self._read, daemon=True)

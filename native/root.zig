@@ -18,3 +18,4 @@ pub const config = @import("config.zig");
 pub const stats = @import("stats.zig");
 pub const gnome = @import("platform/gnome.zig");
 pub const macos = @import("platform/macos.zig");
+pub const errors = @import("errors.zig");

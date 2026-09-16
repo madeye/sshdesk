@@ -245,12 +245,19 @@ fn probeTerminal(a: A, shared: *Shared, tmux: bool, retained: *std.ArrayList(u8)
 }
 pub fn run(a: A, opts: Options) !u8 {
     if (!std.fs.File.stdin().isTty() or !std.fs.File.stdout().isTty()) return error.InteractiveSshPtyRequired;
-    var desktop = try Desktop.init(a, opts.capture, false, opts.animate);
-    defer desktop.deinit();
-    if (!opts.no_input) try desktop.configureInput(opts.input);
     signal_stop.store(false, .release);
     var signals = terminal.Signals.init(signalHandler);
     defer signals.deinit();
+    var desktop = Desktop.init(a, opts.capture, false, opts.animate) catch |err| {
+        if (signal_stop.load(.acquire)) return 130;
+        return err;
+    };
+    defer desktop.deinit();
+    if (!opts.no_input) desktop.configureInput(opts.input) catch |err| {
+        if (signal_stop.load(.acquire)) return 130;
+        return err;
+    };
+    if (signal_stop.load(.acquire)) return 130;
     var state = try terminal.State.enter();
     defer state.deinit();
     var shared: Shared = .{ .allocator = a, .opts = opts, .desktop = &desktop };
@@ -445,9 +452,10 @@ pub fn run(a: A, opts: Options) !u8 {
         fingerprint = digest;
         frames += 1;
         total_bytes += packet_size;
-        adaptive.observe(@as(f64, @floatFromInt(timer.read() - presented_at)) / std.time.ns_per_ms, @as(f64, @floatFromInt(shared.rtt_ns.load(.acquire))) / std.time.ns_per_ms);
+        adaptive.observe(@as(f64, @floatFromInt(write_done - encoded_at)) / std.time.ns_per_ms, @as(f64, @floatFromInt(shared.rtt_ns.load(.acquire))) / std.time.ns_per_ms);
         const probe_started = shared.probe_ns.load(.acquire);
         const pending_ms: f64 = if (probe_started > 0) @as(f64, @floatFromInt(@max(0, std.time.nanoTimestamp() - probe_started))) / std.time.ns_per_ms else 0;
+        adaptive.adjust(timer.read(), pending_ms);
         const interval = adaptive.interval(pending_ms);
         next_present = timer.read() + interval;
         shared.capture_interval.store(interval, .release);

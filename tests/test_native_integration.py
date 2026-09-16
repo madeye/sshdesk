@@ -128,9 +128,10 @@ class NativeContracts(unittest.TestCase):
                                      "--check", "--capture", "x11", "--no-input"],
                                     env=environment, capture_output=True, timeout=10, check=False)
             self.assertEqual(result.returncode, 1, result.stderr)
-            self.assertIn(b"capturer error", result.stderr)
-            self.assertIn(b"FFmpegStreamEnded", result.stderr)
-            self.assertLess(len(result.stderr), 2300)
+            diagnostic = result.stderr + result.stdout
+            self.assertIn(b"capturer error", diagnostic, (result.returncode, result.stdout, result.stderr))
+            self.assertIn(b"FFmpegStreamEnded", diagnostic)
+            self.assertLess(len(diagnostic), 2300)
 
     @unittest.skipUnless(os.name == "posix", "POSIX signal semantics")
     def test_agent_interrupt_restores_session_resources(self) -> None:

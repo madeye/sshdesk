@@ -15,6 +15,7 @@ parser.add_argument("--output", type=Path, default=Path("artifacts/zig-port/benc
 args = parser.parse_args()
 sys.path.insert(0, str(args.reference_root.resolve()))
 from PIL import Image, ImageDraw
+from PIL import __version__ as pillow_version
 
 from sshdesk.capture.base import Frame
 from sshdesk.render import (
@@ -54,7 +55,8 @@ native = subprocess.run([str(args.native_bin.resolve()), "--fixture", str(fixtur
                          "--columns", "100", "--rows", "30", "--color", "256"],
                         check=True, capture_output=True, text=True)
 (args.output / "zig.json").write_text(native.stdout)
-metadata = {"platform": platform.platform(), "python": sys.version, "zig": subprocess.check_output(["zig", "version"], text=True).strip(),
+metadata = {"platform": platform.platform(), "python": sys.version, "pillow": pillow_version,
+            "reference_commit": "3a6e421de5101973852e8735a202dcc1a5c6288a", "zig": subprocess.check_output(["zig", "version"], text=True).strip(),
             "fixture_sha256": hashlib.sha256(fixture.read_bytes()).hexdigest(),
             "native_executable_sha256": hashlib.sha256(args.native_bin.read_bytes()).hexdigest(),
             "conditions": "ReleaseSafe native executable; sequential implementations; run with builds stopped",

@@ -194,7 +194,7 @@ pub fn respond(controller: *Controller, line: []const u8) !Response {
     return .{ .bytes = bytes, .quit = req.action == .quit };
 }
 fn failure(a: A, id: std.json.Value, err: anyerror) !Response {
-    return .{ .bytes = try std.json.Stringify.valueAlloc(a, .{ .id = id, .ok = false, .@"error" = @errorName(err) }, .{}) };
+    return .{ .bytes = try std.json.Stringify.valueAlloc(a, .{ .id = id, .ok = false, .@"error" = @import("errors.zig").describe(err) }, .{}) };
 }
 var interrupted = std.atomic.Value(bool).init(false);
 fn onSignal(_: c_int) callconv(.c) void {
