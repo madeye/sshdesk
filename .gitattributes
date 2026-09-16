@@ -6,3 +6,7 @@
 *.bin binary
 *.m text eol=lf
 *.metal text eol=lf
+
+*.c text eol=lf
+*.comp text eol=lf
+*.spv binary

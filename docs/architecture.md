@@ -116,5 +116,20 @@ synchronization, readback, and correction are included in the retained timings.
 A failed or unavailable GPU falls back to the fixed-point SIMD CPU resizer.
 GPU-only staging allocation failures also fall back; each failed pass is fully
 recomputed on the CPU, without further allocation. Resources are released after
-session workers join. `SSHDESK_RESIZE=cpu` disables Metal, and `metal` requests
-it explicitly. Tests use CPU unless Metal is explicitly requested.
+session workers join. Linux and Windows use a dynamically loaded Vulkan 1.0
+compute backend with the same fixed-point filter. Its embedded SPIR-V uses
+32-bit storage buffers, avoiding optional 8-bit storage features. Reusable
+host-visible coherent buffers carry packed RGB input and RGB/rounding output.
+Submission makes host writes visible; a compute-to-host barrier and fence
+complete before CPU readback or buffer reuse. Failed device/queue commands
+disable further Vulkan dispatch until context teardown.
+
+`SSHDESK_RESIZE=auto` selects Metal on macOS and hardware Vulkan devices on
+Linux/Windows for large downscales. `cpu` disables GPU resizing, while `metal`
+and `vulkan` request their platform's backend explicitly. Explicit Vulkan
+also allows software devices for tests; automatic mode excludes them. Unit
+tests use CPU unless a GPU backend is explicitly requested, then assert that
+every filter pass actually dispatched successfully. Native tests cover exact
+pixels, concurrent calls, teardown/recreation, and GPU-to-SIMD fallback.
+The shader source and generated binary are checked with pinned glslang 12.0.0
+and SPIR-V validation; normal builds embed the binary without invoking a compiler.

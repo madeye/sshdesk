@@ -70,9 +70,10 @@ class NativeBuildTests(unittest.TestCase):
         manifest = (ROOT / "build.zig.zon").read_text()
         self.assertIn('builtin.zig_version_string, "0.15.2"', build)
         self.assertIn('.minimum_zig_version = "0.15.2"', manifest)
-        self.assertEqual(manifest.count('.hash = '), 2)
+        self.assertEqual(manifest.count('.hash = '), 3)
         self.assertIn('libpng-LICENSE', build)
         self.assertIn('zlib-LICENSE', build)
+        self.assertIn('share/licenses/sshdesk/Vulkan-Headers', build)
         self.assertIn('MIT License', (ROOT / "LICENSE").read_text())
 
     def test_installers_build_native_commands_without_python_setup(self) -> None:

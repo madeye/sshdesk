@@ -28,7 +28,7 @@ jobs:
           Split-Path $zig | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install X11 test dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb xauth libx11-6 libxtst6 libxext6 ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y xvfb xauth libx11-6 libxtst6 libxext6 ffmpeg mesa-vulkan-drivers vulkan-validationlayers
       - name: Check Zig formatting
         run: zig fmt --check build.zig native
       - name: Native tests and ReleaseSafe executables (POSIX)
@@ -54,6 +54,16 @@ jobs:
           for mode in ffmpeg xshm x11; do
             SSHDESK_TEST_XVFB=1 SSHDESK_X11_CAPTURE="$mode" xvfb-run -a zig build test
           done
+      - name: Vulkan compute pixels, concurrency, and validation layer
+        if: runner.os == 'Linux'
+        run: |
+          zig build test-bin -Doptimize=ReleaseSafe
+          scripts/test-vulkan.sh
+      - name: Verify checked-in Vulkan shader
+        if: runner.os == 'Linux'
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work debian:bookworm-slim sh -c \
+            'apt-get update && apt-get install -y glslang-tools spirv-tools && scripts/build-vulkan-shader.sh --check'
       - name: Check shell syntax
         if: runner.os != 'Windows'
         run: |

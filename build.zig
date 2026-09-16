@@ -24,6 +24,13 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&b.addInstallFileWithDir(zlib.path("LICENSE"), .prefix, "share/licenses/sshdesk/zlib-LICENSE").step);
     const core = b.createModule(.{ .root_source_file = b.path("native/root.zig"), .target = target, .optimize = optimize, .link_libc = true });
     core.linkLibrary(pngarchive);
+    if (target.result.os.tag == .linux or target.result.os.tag == .windows) {
+        const vulkan_headers = b.dependency("vulkan_headers", .{});
+        core.addIncludePath(vulkan_headers.path("include"));
+        core.addCSourceFile(.{ .file = b.path("native/gpu/vulkan.c"), .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror" } });
+        if (target.result.os.tag == .linux) core.linkSystemLibrary("dl", .{});
+        b.getInstallStep().dependOn(&b.addInstallDirectory(.{ .source_dir = vulkan_headers.path("LICENSES"), .install_dir = .prefix, .install_subdir = "share/licenses/sshdesk/Vulkan-Headers" }).step);
+    }
     if (target.result.os.tag == .macos) {
         core.addCSourceFile(.{ .file = b.path("native/gpu/metal.m"), .flags = &.{ "-fobjc-arc", "-Wall", "-Wextra", "-Werror" } });
         core.linkFramework("Foundation", .{});

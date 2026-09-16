@@ -50,6 +50,31 @@ class NativeContracts(unittest.TestCase):
         ascii_result = self.command("sshdesk-local", "--capture", "synthetic", "--ascii", "--once")
         self.assertNotIn("▀".encode(), ascii_result.stdout)
 
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Vulkan ICD isolation uses Linux loader")
+    def test_missing_vulkan_driver_falls_back_to_identical_cpu_output(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            environment = {**os.environ, "VK_DRIVER_FILES": str(Path(directory) / "missing.json"),
+                           "VK_ICD_FILENAMES": str(Path(directory) / "missing.json")}
+            args = ("--capture", "synthetic", "--once", "--columns", "20", "--rows", "10")
+            cpu = self.command("sshdesk-local", *args, env={**environment, "SSHDESK_RESIZE": "cpu"})
+            vulkan = self.command("sshdesk-local", *args, env={**environment, "SSHDESK_RESIZE": "vulkan"})
+            self.assertEqual(cpu.returncode, 0, cpu.stderr)
+            self.assertEqual(vulkan.returncode, 0, vulkan.stderr)
+            self.assertEqual(cpu.stdout, vulkan.stdout)
+
+    @unittest.skipUnless(os.environ.get("SSHDESK_TEST_VULKAN_SOFTWARE") == "1", "isolated lavapipe fixture")
+    def test_software_vulkan_requires_explicit_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "frame.rgb"
+            fixture.write_bytes(bytes([17, 51, 239]) * (1920 * 1080))
+            for mode, backend in (("cpu", "cpu"), ("auto", "cpu"), ("vulkan", "vulkan")):
+                result = self.command("sshdesk-bench", "--fixture", str(fixture), "--iterations", "1",
+                                      env={**os.environ, "SSHDESK_RESIZE": mode})
+                self.assertEqual(result.returncode, 0, result.stderr)
+                report = json.loads(result.stdout)
+                self.assertEqual(report["resize_backend"], backend)
+                self.assertEqual(report["encoded_bytes"], 0)
+
     def test_non_pty_and_exact_forced_command_allowlist(self) -> None:
         for command in ("", "shell", "sshdesk-shell", "desktop", "sshdesk", "sshdesk-server"):
             result = self.command("sshdesk-forced-command", env={**os.environ, "SSH_ORIGINAL_COMMAND": command})

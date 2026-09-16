@@ -311,7 +311,7 @@ test "optimized resize is pixel-exact against the scalar reference" {
     }
 }
 
-test "Metal resize matches scalar pixels on real GPU when explicitly requested" {
+test "requested GPU backend matches scalar pixels without silent fallback" {
     if (!gpu.enabled()) return error.SkipZigTest;
     defer gpu.deinit();
     const a = std.testing.allocator;
@@ -322,14 +322,17 @@ test "Metal resize matches scalar pixels on real GPU when explicitly requested" 
         random.random().bytes(std.mem.sliceAsBytes(source.pixels));
         var expected = try referenceResize(source, a, shape[2], shape[3]);
         defer expected.deinit();
+        const passes = gpu.testing_completed_passes.load(.acquire);
         var actual = try source.resizeImpl(a, shape[2], shape[3], true);
         defer actual.deinit();
+        try std.testing.expectEqual(passes + 2, gpu.testing_completed_passes.load(.acquire));
         try std.testing.expect(gpu.active());
+        try std.testing.expectEqualStrings(if (@import("builtin").os.tag == .macos) "metal" else "vulkan", gpu.backendName());
         try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(expected.pixels), std.mem.sliceAsBytes(actual.pixels));
     }
 }
 
-test "Metal buffers remain isolated across concurrent resize calls" {
+test "GPU buffers remain isolated across concurrent resize calls" {
     if (!gpu.enabled()) return error.SkipZigTest;
     defer gpu.deinit();
     const Worker = struct {
@@ -356,10 +359,12 @@ test "Metal buffers remain isolated across concurrent resize calls" {
     };
     var first: Worker = .{ .seed = 1 };
     var second: Worker = .{ .seed = 2 };
+    const passes = gpu.testing_completed_passes.load(.acquire);
     const thread = try std.Thread.spawn(.{}, Worker.run, .{&first});
     second.run();
     thread.join();
     try std.testing.expect(first.ok and second.ok);
+    try std.testing.expectEqual(passes + 32, gpu.testing_completed_passes.load(.acquire));
 }
 
 test "failed GPU passes fall back to exact SIMD CPU pixels" {
@@ -394,6 +399,24 @@ test "GPU staging allocation failures fall back without further allocation" {
         var actual = try source.resizeImpl(failing.allocator(), 19, 12, true);
         defer actual.deinit();
         try std.testing.expect(failing.has_induced_failure);
+        try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(expected.pixels), std.mem.sliceAsBytes(actual.pixels));
+    }
+}
+
+test "GPU context can be destroyed and recreated" {
+    if (!gpu.enabled()) return error.SkipZigTest;
+    const a = std.testing.allocator;
+    var source = try synthetic(a, 97, 53, null);
+    defer source.deinit();
+    var expected = try referenceResize(source, a, 19, 12);
+    defer expected.deinit();
+    for (0..3) |_| {
+        gpu.deinit();
+        defer gpu.deinit();
+        try std.testing.expect(!gpu.active());
+        var actual = try source.resizeImpl(a, 19, 12, true);
+        defer actual.deinit();
+        try std.testing.expectEqual(@as(usize, 2), gpu.testing_completed_passes.load(.acquire));
         try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(expected.pixels), std.mem.sliceAsBytes(actual.pixels));
     }
 }

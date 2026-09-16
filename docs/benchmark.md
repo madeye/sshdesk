@@ -79,3 +79,37 @@ python3 tools/compare-native-resize.py \
 To validate actual GPU execution use
 `SSHDESK_RESIZE=metal scripts/with-zig-sdk.sh zig build test`. GPU tests fail
 if no Metal pass executes, while ordinary CI remains usable without a GPU.
+
+
+## Vulkan validation and measurement
+
+Linux/Windows can now use `SSHDESK_RESIZE=vulkan`; `auto` excludes software
+Vulkan devices and uses the same large-downscale threshold as Metal. The
+fixture benchmark reports `resize_backend: "vulkan"` only after a successful
+Vulkan dispatch. `tools/compare-native-resize.py --after-backend vulkan` accepts
+this backend. Use matching ReleaseSafe binaries, fixture, geometry, and device
+for before/after comparisons, and retain initialization separately from steady
+state. A software driver's Vulkan dispatch is not hardware acceleration.
+
+The initial Vulkan validation runs on Linux ARM64 in a local container using
+Mesa lavapipe, with the Khronos validation layer enabled. It proves shader
+execution, exact pixels, buffer synchronization, concurrent use, and resource
+cleanup. It does **not** establish physical Linux/Windows GPU performance. No
+Vulkan speedup claim is made; the retained Apple M4 Metal timings above are
+specific to Metal. Dedicated-GPU host memory transfers may cost more than CPU
+resizing, so `SSHDESK_RESIZE=cpu` remains available.
+
+To regenerate/check the embedded shader with Debian bookworm's glslang 12.0.0:
+
+```sh
+scripts/build-vulkan-shader.sh         # regenerate
+scripts/build-vulkan-shader.sh --check # reproduce and compare bytes
+```
+
+To validate compute under Linux lavapipe (Mesa Vulkan drivers and Khronos
+validation layers required):
+
+```sh
+zig build test-bin -Doptimize=ReleaseSafe
+scripts/test-vulkan.sh
+```

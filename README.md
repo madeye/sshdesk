@@ -314,12 +314,21 @@ then MIT-SHM, then XGetImage. `SSHDESK_MAX_FPS` accepts 1–120.
 behind. Fixed values from 0.25–1.0, such as 0.75, send fewer pixels all the time
 for smoother sessions on slower clients or networks.
 
-`SSHDESK_RESIZE=auto` uses Metal compute for downscaling images with at least
-262,144 pixels on macOS. Smaller images and other platforms use the optimized
-CPU resizer. `cpu` disables GPU resizing; `metal` requests it for all resize
-sizes on macOS. Metal initialization, execution, or staging allocation failure falls back to
-the SIMD CPU resizer.
-Both paths preserve the original filtered pixels, including rounding at edges.
+`SSHDESK_RESIZE=auto` uses GPU compute for downscaling images with at least
+262,144 pixels: Metal on macOS, or a hardware Vulkan device on Linux/Windows.
+Smaller images use the SIMD CPU resizer. GPU initialization, execution, or
+staging allocation failure also falls back to SIMD CPU. `cpu` disables GPU
+resizing; `metal` (macOS) and `vulkan` (Linux/Windows) request it for all sizes.
+All paths preserve the original filtered pixels, including rounding at edges.
+
+Vulkan requires a Vulkan 1.0-capable graphics driver and loader (`libvulkan.so.1`
+on Linux, or the graphics driver's `vulkan-1.dll` on Windows). There is no
+Vulkan SDK or shader compiler requirement for building or running SSHDESK.
+For Debian/Ubuntu, install `libvulkan1` plus the appropriate GPU driver;
+`mesa-vulkan-drivers` supports compatible Mesa hardware. Automatic mode excludes
+CPU Vulkan implementations. Explicit `vulkan` mode also permits software drivers
+such as lavapipe for validation; that is not GPU acceleration. Use `cpu` if
+GPU transfer overhead is slower on your hardware.
 
 ## macOS and Windows host details
 

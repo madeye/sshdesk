@@ -19,12 +19,13 @@ def digest(path: Path) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--before", type=Path, required=True)
+    parser.add_argument("--before-revision", help="Revision of the baseline executable, if known")
     parser.add_argument("--after", type=Path, default=Path("zig-out/bin/sshdesk-bench"))
     parser.add_argument("--fixture", type=Path, default=Path("artifacts/zig-port/benchmark/fixture.rgb"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--columns", type=int, default=100)
     parser.add_argument("--rows", type=int, default=30)
-    parser.add_argument("--after-backend", choices=("cpu", "metal"), default="cpu")
+    parser.add_argument("--after-backend", choices=("cpu", "metal", "vulkan"), default="cpu")
     parser.add_argument("--rounds", type=int, default=5)
     args = parser.parse_args()
     if args.rounds < 1:
@@ -52,7 +53,7 @@ def main() -> None:
         "platform": platform.platform(), "build_mode": "ReleaseSafe", "zig": "0.15.2",
         "recorded_at": datetime.now(timezone.utc).isoformat(),
         "hardware": subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"], text=True).strip() if platform.system() == "Darwin" else platform.processor(),
-        "before_revision": "fb58736767ad9918932c8e9dbab5ff794fc2a0a5",
+        "before_revision": args.before_revision,
         "fixture_sha256": digest(args.fixture),
         "binaries_sha256": {label: digest(path) for label, path in binaries.items()},
         "after_frame_source_sha256": digest(Path("native/frame.zig")),
