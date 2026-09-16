@@ -9,6 +9,14 @@
 #include <dlfcn.h>
 #endif
 
+// Load API entry points without incompatible-function casts. All supported
+// platform ABIs represent exported function addresses with pointer-sized bits.
+#define COPY_ADDRESS(destination, type, expression) do { \
+    type address = (expression); \
+    _Static_assert(sizeof address == sizeof(destination), "function address size"); \
+    memcpy(&(destination), &address, sizeof(destination)); \
+} while (0)
+
 #define FUNCTIONS(X) \
  X(DestroyInstance) X(EnumeratePhysicalDevices) X(GetPhysicalDeviceProperties) \
  X(GetPhysicalDeviceQueueFamilyProperties) X(GetPhysicalDeviceMemoryProperties) \
@@ -94,18 +102,23 @@ void *sshdesk_vulkan_create(const uint32_t *shader, size_t shader_size, int allo
     if (!c) return NULL;
 #ifdef _WIN32
     c->loader = LoadLibraryExA("vulkan-1.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-    if (c->loader) c->get = (PFN_vkGetInstanceProcAddr)GetProcAddress(c->loader, "vkGetInstanceProcAddr");
+    if (c->loader) {
+        // Windows exports untyped function addresses as FARPROC. Copy the
+        // pointer representation without an incompatible-function cast.
+        COPY_ADDRESS(c->get, FARPROC, GetProcAddress(c->loader, "vkGetInstanceProcAddr"));
+    }
 #else
     c->loader = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
-    if (c->loader) c->get = (PFN_vkGetInstanceProcAddr)dlsym(c->loader, "vkGetInstanceProcAddr");
+    if (c->loader) COPY_ADDRESS(c->get, void *, dlsym(c->loader, "vkGetInstanceProcAddr"));
 #endif
     if (!c->get) goto fail;
-    PFN_vkCreateInstance create = (PFN_vkCreateInstance)c->get(NULL, "vkCreateInstance");
+    PFN_vkCreateInstance create;
+    COPY_ADDRESS(create, PFN_vkVoidFunction, c->get(NULL, "vkCreateInstance"));
     if (!create) goto fail;
     VkApplicationInfo app = { .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName = "SSHDESK", .apiVersion = VK_API_VERSION_1_0 };
     VkInstanceCreateInfo instance = { .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, .pApplicationInfo = &app };
     if (create(&instance, NULL, &c->instance) != VK_SUCCESS) goto fail;
-#define LOAD(name) c->name = (PFN_vk##name)c->get(c->instance, "vk" #name); if (!c->name) goto fail;
+#define LOAD(name) COPY_ADDRESS(c->name, PFN_vkVoidFunction, c->get(c->instance, "vk" #name)); if (!c->name) goto fail;
     FUNCTIONS(LOAD)
 #undef LOAD
     uint32_t count = 0;
