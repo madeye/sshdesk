@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import select
+import shutil
 import signal
 import subprocess
 import sys
@@ -111,6 +112,25 @@ class NativeContracts(unittest.TestCase):
             self.assertNotEqual(timed.returncode, 0)
             self.assertIn(b"TimedOut", timed.stderr)
             self.assertLess(time.monotonic() - started, 2)
+
+    @unittest.skipUnless(sys.platform == "linux" and shutil.which("xvfb-run"), "Linux Xvfb failure fixture")
+    def test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shim = root / "ffmpeg"
+            shim.write_text("#!/usr/bin/env python3\nimport sys\n"
+                            "sys.stderr.write('x'*4096+'capturer error')\n"
+                            "sys.stdout.buffer.write(b'partial')\n")
+            shim.chmod(0o755)
+            environment = {**os.environ, "PATH": directory + os.pathsep + os.environ["PATH"],
+                           "SSHDESK_X11_CAPTURE": "ffmpeg"}
+            result = subprocess.run(["xvfb-run", "-a", executable("sshdesk-server"),
+                                     "--check", "--capture", "x11", "--no-input"],
+                                    env=environment, capture_output=True, timeout=10, check=False)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn(b"capturer error", result.stderr)
+            self.assertIn(b"FFmpegStreamEnded", result.stderr)
+            self.assertLess(len(result.stderr), 2300)
 
     @unittest.skipUnless(os.name == "posix", "POSIX signal semantics")
     def test_agent_interrupt_restores_session_resources(self) -> None:
@@ -253,6 +273,27 @@ class NativePtyContracts(unittest.TestCase):
         import pwd
         output = self.session(shell=True)
         self.assertIn(pwd.getpwuid(os.getuid()).pw_name.encode(), output)
+
+
+@unittest.skipUnless(os.name == "nt" and (BIN / "sshdesk.exe").is_file(), "native Windows ConPTY test")
+class NativeWindowsPtyContracts(unittest.TestCase):
+    def test_synthetic_session_resize_detach_and_utf8(self) -> None:
+        from unittest.mock import patch
+
+        from tests.windows_pty import Console
+
+        with patch.dict(os.environ, {"TERM": "xterm-256color", "SSHDESK_RENDER": "ansi"}):
+            console = Console([executable("sshdesk-server"), "--capture", "synthetic", "--no-input"])
+        try:
+            console.wait_for(b"SSHDESK")
+            console.wait_for("▀".encode())
+            console.resize()
+            console.write(b"\x13")
+            console.wait_for(b"capture FPS")
+            console.write(b"\x1d\x1d")
+            self.assertEqual(console.wait(), 0, bytes(console.output[-2000:]))
+        finally:
+            console.close()
 
 
 if __name__ == "__main__":

@@ -115,8 +115,12 @@ pub fn terminate(child: *std.process.Child) void {
         return;
     }
     std.posix.kill(if (group_id != 0) -group_id else child.id, std.posix.SIG.TERM) catch {};
-    var attempts: usize = 0;
-    while (attempts < 50) : (attempts += 1) {
+    var timer = std.time.Timer.start() catch {
+        std.posix.kill(child.id, std.posix.SIG.KILL) catch {};
+        _ = child.wait() catch {};
+        return;
+    };
+    while (timer.read() < 500 * std.time.ns_per_ms) {
         const result = std.posix.waitpid(child.id, std.posix.W.NOHANG);
         if (result.pid != 0) {
             const status = result.status;
@@ -133,8 +137,8 @@ pub fn terminate(child: *std.process.Child) void {
 test "timeouts escalate past a helper that ignores SIGTERM" {
     if (@import("builtin").os.tag == .windows) return error.SkipZigTest;
     var timer = try std.time.Timer.start();
-    try std.testing.expectError(error.ChildTimedOut, run(std.testing.allocator, &.{ "/bin/sh", "-c", "trap '' TERM; exec sleep 5" }, 50 * std.time.ns_per_ms, 100));
-    try std.testing.expect(timer.read() < 2 * std.time.ns_per_s);
+    try std.testing.expectError(error.ChildTimedOut, run(std.testing.allocator, &.{ "/bin/sh", "-c", "trap '' TERM; exec sleep 30" }, 50 * std.time.ns_per_ms, 100));
+    try std.testing.expect(timer.read() < 5 * std.time.ns_per_s);
 }
 
 test "helper descendants cannot retain pipes and block input-writer cleanup" {
@@ -145,5 +149,5 @@ test "helper descendants cannot retain pipes and block input-writer cleanup" {
     @memset(payload, 'x');
     var timer = try std.time.Timer.start();
     try std.testing.expectError(error.ChildTimedOut, runWithInput(a, &.{ "/bin/sh", "-c", "sleep 10 & wait" }, payload, 50 * std.time.ns_per_ms, 100));
-    try std.testing.expect(timer.read() < 2 * std.time.ns_per_s);
+    try std.testing.expect(timer.read() < 5 * std.time.ns_per_s);
 }

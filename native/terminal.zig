@@ -41,6 +41,8 @@ pub fn cleanup(bytes: []const u8) void {
 pub const State = if (windows) struct {
     input_mode: c.DWORD,
     output_mode: c.DWORD,
+    input_page: c.UINT,
+    output_page: c.UINT,
     pub fn enter() !@This() {
         const stdin = std.fs.File.stdin();
         const stdout = std.fs.File.stdout();
@@ -50,12 +52,18 @@ pub const State = if (windows) struct {
         if (c.SetConsoleMode(stdin.handle, (input_mode & ~@as(c.DWORD, c.ENABLE_ECHO_INPUT | c.ENABLE_LINE_INPUT | c.ENABLE_PROCESSED_INPUT)) | c.ENABLE_VIRTUAL_TERMINAL_INPUT) == 0) return error.EnableVirtualTerminalInputFailed;
         errdefer _ = c.SetConsoleMode(stdin.handle, input_mode);
         if (c.SetConsoleMode(stdout.handle, output_mode | c.ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0) return error.EnableVirtualTerminalOutputFailed;
+        const input_page = c.GetConsoleCP();
+        const output_page = c.GetConsoleOutputCP();
+        _ = c.SetConsoleCP(65001);
+        _ = c.SetConsoleOutputCP(65001);
         output_thread = c.OpenThread(c.THREAD_TERMINATE, 0, c.GetCurrentThreadId());
-        return .{ .input_mode = input_mode, .output_mode = output_mode };
+        return .{ .input_mode = input_mode, .output_mode = output_mode, .input_page = input_page, .output_page = output_page };
     }
     pub fn deinit(self: *@This()) void {
         if (output_thread != null) _ = c.CloseHandle(output_thread);
         output_thread = null;
+        _ = c.SetConsoleCP(self.input_page);
+        _ = c.SetConsoleOutputCP(self.output_page);
         _ = c.SetConsoleMode(std.fs.File.stdin().handle, self.input_mode);
         _ = c.SetConsoleMode(std.fs.File.stdout().handle, self.output_mode);
     }

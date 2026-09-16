@@ -73,6 +73,7 @@ test_server_rejects_non_pty_session_cleanly (test_lifecycle.LifecycleTests.test_
 test_terminal_restored_after_exception (test_lifecycle.LifecycleTests.test_terminal_restored_after_exception) ... ok
 test_agent_interrupt_restores_session_resources (test_native_integration.NativeContracts.test_agent_interrupt_restores_session_resources) ... ok
 test_bounded_json_session_recovers_and_quits (test_native_integration.NativeContracts.test_bounded_json_session_recovers_and_quits) ... ok
+test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child (test_native_integration.NativeContracts.test_ffmpeg_failure_retains_bounded_diagnostic_and_reaps_child) ... skipped 'Linux Xvfb failure fixture'
 test_invalid_options_are_rejected_before_capture (test_native_integration.NativeContracts.test_invalid_options_are_rejected_before_capture) ... ok
 test_nine_native_commands_and_help (test_native_integration.NativeContracts.test_nine_native_commands_and_help) ... ok
 test_non_pty_and_exact_forced_command_allowlist (test_native_integration.NativeContracts.test_non_pty_and_exact_forced_command_allowlist) ... ok
@@ -85,6 +86,7 @@ test_input_stays_responsive_under_output_backpressure (test_native_integration.N
 test_kitty_probe_and_native_pixels (test_native_integration.NativePtyContracts.test_kitty_probe_and_native_pixels) ... ok
 test_shell_retains_authenticated_identity (test_native_integration.NativePtyContracts.test_shell_retains_authenticated_identity) ... ok
 test_signal_cleanup (test_native_integration.NativePtyContracts.test_signal_cleanup) ... ok
+test_synthetic_session_resize_detach_and_utf8 (test_native_integration.NativeWindowsPtyContracts.test_synthetic_session_resize_detach_and_utf8) ... skipped 'native Windows ConPTY test'
 test_auto_render_scale_tracks_client_backpressure (test_performance.PerformanceTests.test_auto_render_scale_tracks_client_backpressure) ... ok
 test_capture_worker_preserves_backend_error_detail (test_performance.PerformanceTests.test_capture_worker_preserves_backend_error_detail) ... ok
 test_frame_pump_keeps_latest_instead_of_queueing (test_performance.PerformanceTests.test_frame_pump_keeps_latest_instead_of_queueing) ... ok
@@ -115,6 +117,6 @@ test_resize_forces_full (test_render.RenderTests.test_resize_forces_full) ... ok
 test_terminal_capability_detection (test_render.RenderTests.test_terminal_capability_detection) ... ok
 
 ----------------------------------------------------------------------
-Ran 102 tests in 4.429s
+Ran 104 tests in 4.497s
 
-OK (skipped=2)
+OK (skipped=4)
