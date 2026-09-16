@@ -19,3 +19,5 @@ pub const stats = @import("stats.zig");
 pub const gnome = @import("platform/gnome.zig");
 pub const macos = @import("platform/macos.zig");
 pub const errors = @import("errors.zig");
+
+pub const gpu = @import("gpu.zig");

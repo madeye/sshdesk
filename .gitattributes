@@ -4,3 +4,5 @@
 *.sh text eol=lf
 *.py text eol=lf
 *.bin binary
+*.m text eol=lf
+*.metal text eol=lf

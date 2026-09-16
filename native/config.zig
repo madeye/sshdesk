@@ -3,6 +3,7 @@ pub const keys = [_][]const u8{
     "DISPLAY",             "XAUTHORITY",               "WAYLAND_DISPLAY",     "XDG_RUNTIME_DIR", "XDG_SESSION_TYPE",
     "XDG_CURRENT_DESKTOP", "DBUS_SESSION_BUS_ADDRESS", "YDOTOOL_SOCKET",      "SSHDESK_RENDER",  "SSHDESK_COLOR",
     "SSHDESK_MOUSE",       "SSHDESK_UNICODE",          "SSHDESK_X11_CAPTURE", "SSHDESK_MAX_FPS", "SSHDESK_SCALE",
+    "SSHDESK_RESIZE",
 };
 pub fn validAccount(name: []const u8) bool {
     if (name.len == 0 or name.len > 255) return false;

@@ -100,3 +100,19 @@ OpenSSH ForceCommand dispatcher
     |-- sshdesk-agent ... -------------- restricted agent parser
     `-- shell -------------------------- authenticated account login shell
 ```
+
+## Resizing
+
+The CPU resizer precomputes separable bilinear filter coefficients and walks
+rows contiguously. Its fixed-point SIMD sums use a conservative error bound;
+channels near a rounding boundary are re-evaluated with the original floating
+arithmetic. This retains exact pixels while avoiding repeated coefficient work.
+
+On macOS, large downscales use an optional Metal compute pipeline. The Zig
+controller serializes a reusable device/queue and shared buffers through a
+small ARC-managed Objective-C bridge. Each GPU pass produces RGB plus rounding
+flags; Zig corrects flagged channels before the next pass. Dispatch, upload,
+synchronization, readback, and correction are included in the retained timings.
+A failed or unavailable GPU falls back to CPU. Resources are released after
+session workers join. `SSHDESK_RESIZE=cpu` disables Metal, and `metal` requests
+it explicitly. Tests use CPU unless Metal is explicitly requested.

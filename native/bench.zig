@@ -70,6 +70,7 @@ fn fixture(a: std.mem.Allocator, opts: Options, path: []const u8) !u8 {
     const samples = try a.alloc(u64, opts.iterations);
     defer a.free(samples);
     var total_bytes: usize = 0;
+    var first_frame_ns: u64 = 0;
     var previous: ?render.Rendered = null;
     defer if (previous) |*p| p.deinit();
     var timer = try std.time.Timer.start();
@@ -83,6 +84,7 @@ fn fixture(a: std.mem.Allocator, opts: Options, path: []const u8) !u8 {
         if (previous) |*p| p.deinit();
         previous = current;
         transferred = true;
+        if (iteration == 0) first_frame_ns = timer.read() - start;
         if (iteration >= 10) {
             samples[iteration - 10] = timer.read() - start;
             total_bytes += packet.bytes.len;
@@ -90,7 +92,7 @@ fn fixture(a: std.mem.Allocator, opts: Options, path: []const u8) !u8 {
     }
     var total: u64 = 0;
     for (samples) |n| total += n;
-    const result = try std.json.Stringify.valueAlloc(a, .{ .implementation = "zig", .iterations = opts.iterations, .warmup = 10, .columns = opts.columns, .rows = opts.rows, .mean_ms = @as(f64, @floatFromInt(total)) / @as(f64, @floatFromInt(opts.iterations)) / std.time.ns_per_ms, .encoded_bytes = total_bytes, .samples_ns = samples }, .{});
+    const result = try std.json.Stringify.valueAlloc(a, .{ .implementation = "zig", .resize_backend = if (@import("gpu.zig").active()) "metal" else "cpu", .first_frame_ms = @as(f64, @floatFromInt(first_frame_ns)) / std.time.ns_per_ms, .iterations = opts.iterations, .warmup = 10, .columns = opts.columns, .rows = opts.rows, .mean_ms = @as(f64, @floatFromInt(total)) / @as(f64, @floatFromInt(opts.iterations)) / std.time.ns_per_ms, .encoded_bytes = total_bytes, .samples_ns = samples }, .{});
     defer a.free(result);
     try std.fs.File.stdout().writeAll(result);
     try std.fs.File.stdout().writeAll("\n");

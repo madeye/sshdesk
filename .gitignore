@@ -12,3 +12,5 @@ zig-out/
 .local-tools/
 
 artifacts/zig-port/benchmark/fixture.rgb
+
+artifacts/resize-performance/python-comparison/fixture.rgb

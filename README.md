@@ -304,19 +304,26 @@ SSHDESK_UNICODE=auto
 SSHDESK_X11_CAPTURE=auto
 SSHDESK_MAX_FPS=auto
 SSHDESK_SCALE=auto
+SSHDESK_RESIZE=auto
 ```
 
 `SSHDESK_RENDER=kitty` requires sharp graphics; `ansi` forces the universal
 fallback. `SSHDESK_X11_CAPTURE=auto` tries continuously drained FFmpeg/XCB,
-then MIT-SHM, then Pillow/XCB. `SSHDESK_MAX_FPS` accepts 1–120.
+then MIT-SHM, then XGetImage. `SSHDESK_MAX_FPS` accepts 1–120.
 `SSHDESK_SCALE=auto` dynamically reduces detail when the client terminal falls
 behind. Fixed values from 0.25–1.0, such as 0.75, send fewer pixels all the time
 for smoother sessions on slower clients or networks.
 
+`SSHDESK_RESIZE=auto` uses Metal compute for downscaling images with at least
+262,144 pixels on macOS. Smaller images and other platforms use the optimized
+CPU resizer. `cpu` disables GPU resizing; `metal` requests it for all resize
+sizes on macOS. Metal initialization or execution failure falls back to CPU.
+Both paths preserve the original filtered pixels, including rounding at edges.
+
 ## macOS and Windows host details
 
-Linux is the primary, fully integrated OpenSSH host. Native Pillow capture plus
-Quartz input on macOS and SendInput on Windows are available for development and
+Linux is the primary, fully integrated OpenSSH host. CoreGraphics capture and
+Quartz input on macOS, and GDI capture with SendInput on Windows are available for development and
 manually launched sessions. The repository-local commands below are useful for
 development; most users should use the one-line installers above:
 

@@ -24,6 +24,12 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&b.addInstallFileWithDir(zlib.path("LICENSE"), .prefix, "share/licenses/sshdesk/zlib-LICENSE").step);
     const core = b.createModule(.{ .root_source_file = b.path("native/root.zig"), .target = target, .optimize = optimize, .link_libc = true });
     core.linkLibrary(pngarchive);
+    if (target.result.os.tag == .macos) {
+        core.addCSourceFile(.{ .file = b.path("native/gpu/metal.m"), .flags = &.{ "-fobjc-arc", "-Wall", "-Wextra", "-Werror" } });
+        core.linkFramework("Foundation", .{});
+        core.linkFramework("Metal", .{});
+        core.linkSystemLibrary("objc", .{});
+    }
     if (target.result.os.tag == .windows) {
         core.linkSystemLibrary("user32", .{});
         core.linkSystemLibrary("gdi32", .{});

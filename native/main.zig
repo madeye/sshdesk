@@ -12,6 +12,7 @@ pub fn main() void {
     if (code != 0) std.process.exit(code);
 }
 fn run(a: std.mem.Allocator) !u8 {
+    defer core.gpu.deinit();
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     return core.cli.dispatch(a, @import("options").command, args[1..]);
