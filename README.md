@@ -83,16 +83,13 @@ needed:
 & ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/rylena/sshdesk/main/scripts/install.ps1')))
 ```
 
-Both one-line entry points detect the OS, install missing Python/OpenSSH
+Both one-line entry points detect the OS, install missing Zig/OpenSSH
 prerequisites, install SSHDESK, validate graphical access and the forced-command
 configuration, and start the platform's OpenSSH service. On Wayland, the Linux
 installer detects GNOME, KDE Plasma, or wlroots. GNOME uses one persistent
 Mutter/PipeWire stream with compositor-native input; KDE and wlroots install a
 capture command and checksum-verified `ydotoold` helper. They support common Linux
-distributions, macOS, and Windows 10/11. The installer asks whether to install
-and start Tailscale only after SSHDESK and OpenSSH setup succeeds.
-Tailscale carries normal OpenSSH over the private tailnet; it does not replace
-OpenSSH or add a second SSH authentication mode.
+distributions, macOS, and Windows 10/11.
 
 > [!IMPORTANT]
 > Cross-platform installation does not remove OS security boundaries. macOS
@@ -108,20 +105,12 @@ OpenSSH or add a second SSH authentication mode.
 > for the machine. On Linux/macOS, use `--user USER` when automatic user
 > detection is wrong.
 
-For unattended installs, download the script and use `--tailscale` or
-`--no-tailscale`:
+For unattended installs, download the script and select the account:
 
 ```bash
 curl -fsSLo /tmp/sshdesk-install.sh \
   https://raw.githubusercontent.com/rylena/sshdesk/main/scripts/install.sh
-sh /tmp/sshdesk-install.sh --user alice --no-tailscale
-```
-
-Windows PowerShell accepts `-Tailscale` or `-NoTailscale` on the downloaded
-script block:
-
-```powershell
-& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/rylena/sshdesk/main/scripts/install.ps1'))) -NoTailscale
+sh /tmp/sshdesk-install.sh --user alice
 ```
 
 ### Repairing a Wayland installation
@@ -137,13 +126,13 @@ ordinary SSH command from the client.
 
 ### Manual installation
 
-SSHDESK's installer is distribution-independent. It needs Python 3.10+, a
-working Python `venv`, OpenSSH server, and the capture/input tools for the active
+SSHDESK's installer is distribution-independent. It needs a
+Zig 0.15.2 compiler, OpenSSH server, and the capture/input tools for the active
 display stack:
 
 | Linux session | Capture | Input |
 |---|---|---|
-| X11, any desktop | FFmpeg/XCB, MIT-SHM, or Pillow/XCB | XTest |
+| X11, any desktop | FFmpeg/XCB, MIT-SHM, or XGetImage | XTest |
 | wlroots (Sway, Hyprland, etc.) | `grim` | `ydotool` + `ydotoold` |
 | GNOME Wayland | persistent Mutter + PipeWire/GStreamer | Mutter RemoteDesktop API |
 | KDE Plasma Wayland | `spectacle` | `ydotool` + `ydotoold` |
@@ -337,7 +326,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install-windows.ps1
 ```
 
 macOS requires Screen Recording and Accessibility permission for the installed
-Python process. Windows hosting must execute inside the logged-in interactive
+native executable. Windows hosting must execute inside the logged-in interactive
 desktop; the normal Windows OpenSSH service may be isolated in Session 0, so
 forced-command hosting there is experimental. Linux/macOS/Windows terminals are
 all supported as clients because the visual protocol remains standard terminal
@@ -347,26 +336,37 @@ See [platform support](docs/platforms.md) for exact backend behavior.
 
 ## Development, tests, and benchmark
 
-```bash
-python3 -m venv .venv --system-site-packages
-. .venv/bin/activate
-python -m pip install -e '.[fast,dev]'
-
-sshdesk-server --capture synthetic --no-input
-python -m unittest discover -s tests -v
-ruff check src tests
-```
-
-Benchmark exact rendered terminal bytes:
+Build the nine native commands with [Zig 0.15.2](https://ziglang.org/documentation/0.15.2/):
 
 ```bash
-sshdesk-bench --duration 60 --columns 100 --rows 30 --color 256
+scripts/with-zig-sdk.sh zig build -Doptimize=ReleaseSafe
+zig fmt --check build.zig native
+scripts/with-zig-sdk.sh zig build test
+for script in scripts/*.sh; do sh -n "$script"; done
+zig-out/bin/sshdesk-server --capture synthetic --no-input
+zig-out/bin/sshdesk-bench --duration 60 --columns 100 --rows 30 --color 256
 ```
 
-Python keeps platform integration and iteration straightforward today. Capture,
-rendering, input, session management, and terminal output are separate modules,
-so performance-critical pieces can move to Rust later without changing the
-OpenSSH user experience.
+On Windows use `zig build` directly. The SDK wrapper selects an already installed
+compatible macOS SDK for Zig 0.15.2; it does not change `xcode-select`. Set
+`SSHDESK_MACOS_SDK` if automatic selection is unavailable. libpng and zlib are
+pinned and compiled into the executables. Other backend libraries are loaded
+only when selected. Installation and native commands do not use Python.
+
+The port is still undergoing behavioral parity validation. The Python source,
+packaging, and old tests remain temporarily as a reference and must not be
+removed before the remaining checks in [port status](docs/zig-port.md) pass.
+Native executable integration tests use only Python's standard library as a
+development harness:
+
+```bash
+python3 -m unittest tests.test_native_integration -v
+```
+
+Raw matching-workload benchmark results are under
+[`artifacts/zig-port/benchmark`](artifacts/zig-port/benchmark). They include
+warmups, all measured samples, and a reproducible fixture definition. A language
+change alone is not evidence of a speedup.
 
 ## Documentation
 

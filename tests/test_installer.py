@@ -25,7 +25,7 @@ class InstallerTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertIn("--tailscale | --no-tailscale", result.stdout)
+        self.assertIn("--user USER", result.stdout)
         self.assertIn('Linux|Darwin)', INSTALLER.read_text())
 
     def test_posix_forced_command_accepts_shell_selector(self) -> None:
@@ -41,12 +41,11 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("requires an interactive terminal", result.stderr)
 
-    def test_tailscale_is_official_optional_and_last(self) -> None:
-        source = INSTALLER.read_text()
-        self.assertIn('TAILSCALE_INSTALL_URL="https://tailscale.com/install.sh"', source)
-        self.assertIn("IFS= read -r answer </dev/tty", source)
-        self.assertLess(source.rindex("start_openssh\n"), source.rindex("prompt_tailscale\n"))
-        self.assertLess(source.rindex("prompt_tailscale\n"), source.rindex("install_tailscale\n"))
+    def test_removed_network_options_are_unknown(self) -> None:
+        for option in ("--tailscale", "--no-tailscale"):
+            result = subprocess.run(["sh", INSTALLER, option], capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unknown option", result.stderr)
 
     def test_wayland_dependencies_are_installed_and_checked_before_openssh(self) -> None:
         source = INSTALLER.read_text()
@@ -72,14 +71,12 @@ class InstallerTests(unittest.TestCase):
 
 
 class WindowsInstallerTests(unittest.TestCase):
-    def test_windows_bootstrap_downloads_configures_and_prompts_last(self) -> None:
+    def test_windows_bootstrap_downloads_and_configures(self) -> None:
         source = WINDOWS_INSTALLER.read_text()
         self.assertIn('Get-WindowsCapability -Online -Name "OpenSSH.Server', source)
         self.assertIn('"https://github.com/$Repository/archive/refs/heads/$Branch.zip"', source)
-        self.assertIn('Read-Host "Install and start Tailscale now? [y/N]"', source)
-        self.assertIn("Tailscale.Tailscale", source)
         self.assertIn('Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP"', source)
-        self.assertLess(source.index("Restart-Service sshd"), source.index("Read-Host"))
+        self.assertIn("[CmdletBinding()]", source)
 
 
 class PackageCompatibilityTests(unittest.TestCase):

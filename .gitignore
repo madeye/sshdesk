@@ -6,3 +6,9 @@ __pycache__/
 .ruff_cache/
 build/
 dist/
+
+.zig-cache/
+zig-out/
+.local-tools/
+
+artifacts/zig-port/benchmark/fixture.rgb

@@ -60,7 +60,6 @@
 - make the one-line bootstrap detect Linux and macOS hosts
 - add a native PowerShell one-line bootstrap for Windows
 - configure platform-native OpenSSH where the host permits interactive desktop access
-- offer the optional Tailscale install at the end on Linux, macOS, and Windows
 - add a cross-platform forced-command entry point that never evaluates remote shell input
 
 ## 0.3.1
@@ -68,7 +67,6 @@
 - add a one-line Linux bootstrap installer
 - detect and install missing Python/OpenSSH prerequisites across common distributions
 - configure, validate, and start OpenSSH automatically
-- optionally install, start, and connect Tailscale after SSHDESK setup
 
 ## 0.3.0
 

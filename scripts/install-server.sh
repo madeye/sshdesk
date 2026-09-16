@@ -42,34 +42,15 @@ done
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 project_dir="$(dirname -- "${script_dir}")"
 install_root="/opt/sshdesk"
-venv="${install_root}/venv"
-
-command -v python3 >/dev/null || { echo "python3 is required" >&2; exit 1; }
-command -v ffmpeg >/dev/null || {
-    echo "note: ffmpeg not found; using the slower MIT-SHM capture fallback" >&2
-}
-
+zig_dir="$(sh "${script_dir}/setup-zig.sh" "${install_root}/toolchain")"
+PATH="${zig_dir}:${PATH}"
+export PATH
+command -v ffmpeg >/dev/null || echo "note: ffmpeg not found; using MIT-SHM capture fallback" >&2
 install -d -m 0755 "${install_root}" /etc/sshdesk /usr/local/bin /etc/sudoers.d
-if [ ! -x "${venv}/bin/python" ]; then
-    python3 -m venv --system-site-packages "${venv}" || {
-        echo "could not create a venv; install your distribution's Python venv package" >&2
-        exit 1
-    }
-fi
-if ! "${venv}/bin/python" -m pip install --upgrade "${project_dir}[fast]"; then
-    echo "note: optional native acceleration failed; installing the portable build" >&2
-    "${venv}/bin/python" -m pip install --upgrade "${project_dir}"
-fi
-
-install -m 0755 "${script_dir}/sshdesk-forced-command" /usr/local/bin/sshdesk-forced-command
-ln -sfn "${venv}/bin/sshdesk-server" /usr/local/bin/sshdesk-server
-ln -sfn "${venv}/bin/sshdesk-bench" /usr/local/bin/sshdesk-bench
-ln -sfn "${venv}/bin/sshdesk-local" /usr/local/bin/sshdesk-local
-ln -sfn "${venv}/bin/sshdesk" /usr/local/bin/sshdesk
-ln -sfn "${venv}/bin/sshdesk-agent" /usr/local/bin/sshdesk-agent
-ln -sfn "${venv}/bin/sshdesk-agent-ssh" /usr/local/bin/sshdesk-agent-ssh
-ln -sfn "${venv}/bin/sshdesk-split" /usr/local/bin/sshdesk-split
-ln -sfn "${venv}/bin/sshdesk-remote" /usr/local/bin/sshdesk-remote
+(cd "${project_dir}" && zig build -Doptimize=ReleaseSafe --prefix "${install_root}")
+for command in sshdesk sshdesk-local sshdesk-server sshdesk-bench sshdesk-agent sshdesk-agent-ssh sshdesk-forced-command sshdesk-split sshdesk-remote; do
+    ln -sfn "${install_root}/bin/${command}" "/usr/local/bin/${command}"
+done
 
 config="/etc/sshdesk/${account}.conf"
 umask 077

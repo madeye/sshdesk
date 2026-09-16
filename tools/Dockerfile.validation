@@ -1,0 +1,5 @@
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xvfb xauth x11-utils libx11-6 libxtst6 libxext6 libpng16-16 ffmpeg python3 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /work

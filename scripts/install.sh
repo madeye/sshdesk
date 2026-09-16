@@ -3,8 +3,6 @@ set -eu
 
 REPOSITORY="rylena/sshdesk"
 BRANCH="main"
-TAILSCALE_INSTALL_URL="https://tailscale.com/install.sh"
-TAILSCALE_MAC_URL="https://tailscale.com/download/mac"
 HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 YDOTOOL_VERSION="1.0.4"
 YDOTOOL_URL="https://github.com/ReimuNotMoe/ydotool/releases/download/v1.0.4/ydotool-release-ubuntu-latest"
@@ -13,7 +11,6 @@ YDOTOOL_SHA256="daa83507a596d6839b7467540382dbdc6e4bf64ebfa4f7d6416e877d9a522c0c
 YDOTOOLD_SHA256="3f14f96308935214c0fb154507360f7632e7deda1935dc2d538259fd9986ed36"
 YDOTOOL_SOURCE_URL="https://github.com/ReimuNotMoe/ydotool/archive/refs/tags/v1.0.4.tar.gz"
 YDOTOOL_SOURCE_SHA256="ba075a43aa6ead51940e892ecffa4d0b8b40c241e4e2bc4bd9bd26b61fde23bd"
-tailscale_choice="ask"
 requested_user="${SSHDESK_USER-}"
 temporary_directory=""
 operating_system="$(uname -s)"
@@ -29,10 +26,10 @@ fail() {
 
 usage() {
     cat <<'EOF'
-Usage: install.sh [--user USER] [--tailscale | --no-tailscale]
+Usage: install.sh [--user USER]
 
 Installs SSHDESK for the active Linux or macOS desktop user, configures
-OpenSSH, and optionally installs and starts Tailscale at the end.
+and validates OpenSSH.
 EOF
 }
 
@@ -50,14 +47,6 @@ while [ "$#" -gt 0 ]; do
             [ "$#" -ge 2 ] || fail "--user requires an account name"
             requested_user="$2"
             shift 2
-            ;;
-        --tailscale)
-            tailscale_choice="yes"
-            shift
-            ;;
-        --no-tailscale)
-            tailscale_choice="no"
-            shift
             ;;
         -h|--help)
             usage
@@ -124,38 +113,22 @@ run_as_desktop_user() {
 }
 
 install_prerequisites() {
-    need_python=0
-    need_sshd=0
-    need_venv=0
-    command -v python3 >/dev/null 2>&1 || need_python=1
-    command -v sshd >/dev/null 2>&1 || [ -x /usr/sbin/sshd ] || need_sshd=1
-    if [ "${need_python}" -eq 0 ]; then
-        venv_check="${temporary_directory}/venv-check"
-        if ! python3 -m venv "${venv_check}" >/dev/null 2>&1; then
-            need_venv=1
-        fi
-        find "${venv_check}" -depth -mindepth 1 -delete 2>/dev/null || true
-        rmdir "${venv_check}" 2>/dev/null || true
-    fi
-    [ "${need_python}" -eq 0 ] && [ "${need_sshd}" -eq 0 ] && \
-        [ "${need_venv}" -eq 0 ] && return
-
-    say "Installing required Python and OpenSSH packages..."
+    say "Installing native desktop and OpenSSH dependencies..."
     if command -v apt-get >/dev/null 2>&1; then
         ${as_root} apt-get update
-        ${as_root} apt-get install -y openssh-server python3 python3-venv
+        ${as_root} apt-get install -y openssh-server curl xz-utils libpng16-16 libx11-6 libxext6 libxtst6 ffmpeg
     elif command -v dnf >/dev/null 2>&1; then
-        ${as_root} dnf install -y openssh-server python3 python3-pip
+        ${as_root} dnf install -y openssh-server curl xz libpng libX11 libXext libXtst ffmpeg-free
     elif command -v yum >/dev/null 2>&1; then
-        ${as_root} yum install -y openssh-server python3 python3-pip
+        ${as_root} yum install -y openssh-server curl xz libpng libX11 libXext libXtst
     elif command -v pacman >/dev/null 2>&1; then
-        ${as_root} pacman -Sy --needed --noconfirm openssh python python-pip
+        ${as_root} pacman -Sy --needed --noconfirm openssh curl xz libpng libx11 libxext libxtst ffmpeg
     elif command -v zypper >/dev/null 2>&1; then
-        ${as_root} zypper --non-interactive install openssh python3 python3-pip
+        ${as_root} zypper --non-interactive install openssh curl xz libpng16-16 libX11-6 libXext6 libXtst6 ffmpeg
     elif command -v apk >/dev/null 2>&1; then
-        ${as_root} apk add openssh-server python3 py3-pip py3-virtualenv
+        ${as_root} apk add openssh-server curl xz libpng libx11 libxext libxtst ffmpeg
     else
-        fail "install Python 3 with venv and OpenSSH server, then rerun this command"
+        fail "install OpenSSH, libpng, libX11, libXext, libXtst, curl and xz, then rerun"
     fi
 }
 
@@ -214,16 +187,7 @@ install_linux_capture_package() {
 }
 
 gnome_streaming_is_ready() {
-    python3 -c '
-import gi
-gi.require_version("Gio", "2.0")
-gi.require_version("Gst", "1.0")
-gi.require_version("GstApp", "1.0")
-gi.require_version("GstVideo", "1.0")
-from gi.repository import Gst
-Gst.init(None)
-raise SystemExit(0 if Gst.ElementFactory.find("pipewiresrc") else 1)
-' >/dev/null 2>&1
+    command -v gst-inspect-1.0 >/dev/null 2>&1 && gst-inspect-1.0 pipewiresrc >/dev/null 2>&1
 }
 
 install_gnome_streaming_support() {
@@ -232,23 +196,23 @@ install_gnome_streaming_support() {
     if command -v apt-get >/dev/null 2>&1; then
         ${as_root} apt-get update
         ${as_root} apt-get install -y \
-            python3-gi gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 \
+            libglib2.0-0 gstreamer1.0-tools \
             gstreamer1.0-plugins-base gstreamer1.0-pipewire
     elif command -v dnf >/dev/null 2>&1; then
         ${as_root} dnf install -y \
-            python3-gobject gstreamer1 gstreamer1-plugins-base pipewire-gstreamer
+            glib2 gstreamer1 gstreamer1-plugins-base pipewire-gstreamer
     elif command -v yum >/dev/null 2>&1; then
         ${as_root} yum install -y \
-            python3-gobject gstreamer1 gstreamer1-plugins-base pipewire-gstreamer
+            glib2 gstreamer1 gstreamer1-plugins-base pipewire-gstreamer
     elif command -v pacman >/dev/null 2>&1; then
         ${as_root} pacman -Sy --needed --noconfirm \
-            python-gobject gstreamer gst-plugins-base gst-plugin-pipewire
+            glib2 gstreamer gst-plugins-base gst-plugin-pipewire
     elif command -v zypper >/dev/null 2>&1; then
         ${as_root} zypper --non-interactive install \
-            python3-gobject gstreamer gstreamer-plugins-base gstreamer-plugin-pipewire
+            glib2 gstreamer gstreamer-plugins-base gstreamer-plugin-pipewire
     elif command -v apk >/dev/null 2>&1; then
         ${as_root} apk add \
-            py3-gobject3 gstreamer gst-plugins-base gst-plugin-pipewire
+            glib gstreamer gst-plugins-base gst-plugin-pipewire
     else
         fail "install PyGObject, GStreamer, and its PipeWire plugin, then rerun"
     fi
@@ -429,18 +393,11 @@ ensure_homebrew() {
 }
 
 install_macos_prerequisites() {
-    if command -v python3 >/dev/null 2>&1 && \
-        python3 -m venv "${temporary_directory}/venv-check" >/dev/null 2>&1; then
-        return
-    fi
-    find "${temporary_directory}/venv-check" -depth -mindepth 1 -delete 2>/dev/null || true
-    rmdir "${temporary_directory}/venv-check" 2>/dev/null || true
     brew_binary="$(ensure_homebrew)"
-    "${brew_binary}" install python
+    "${brew_binary}" install xz
     brew_prefix="$("${brew_binary}" --prefix)"
     PATH="${brew_prefix}/bin:${PATH}"
     export PATH
-    command -v python3 >/dev/null 2>&1 || fail "Python 3 is unavailable after installation"
 }
 
 download_project() {
@@ -538,60 +495,6 @@ start_openssh() {
     fail "OpenSSH is configured, but its service could not be started"
 }
 
-prompt_tailscale() {
-    if [ "${tailscale_choice}" != "ask" ]; then
-        return
-    fi
-    if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
-        say "No interactive terminal; skipping optional Tailscale installation."
-        tailscale_choice="no"
-        return
-    fi
-    printf 'Install and start Tailscale now? [y/N] ' >/dev/tty
-    IFS= read -r answer </dev/tty || answer=""
-    case "${answer}" in
-        y|Y|yes|YES|Yes) tailscale_choice="yes" ;;
-        *) tailscale_choice="no" ;;
-    esac
-}
-
-install_tailscale() {
-    [ "${tailscale_choice}" = "yes" ] || return 0
-    if [ "${operating_system}" = "Darwin" ]; then
-        if [ ! -d /Applications/Tailscale.app ]; then
-            say "Installing the Tailscale macOS app..."
-            brew_binary="$(ensure_homebrew)"
-            "${brew_binary}" install --cask tailscale
-        else
-            say "Tailscale is already installed."
-        fi
-        say "Opening Tailscale to finish its VPN permission and login prompts..."
-        open -a Tailscale || open "${TAILSCALE_MAC_URL}"
-        return
-    fi
-    if ! command -v tailscale >/dev/null 2>&1; then
-        say "Installing Tailscale from the official installer..."
-        tailscale_script="${temporary_directory}/tailscale-install.sh"
-        curl -fsSL "${TAILSCALE_INSTALL_URL}" -o "${tailscale_script}"
-        ${as_root} sh "${tailscale_script}"
-    else
-        say "Tailscale is already installed."
-    fi
-
-    if command -v systemctl >/dev/null 2>&1; then
-        ${as_root} systemctl enable --now tailscaled.service
-    elif command -v service >/dev/null 2>&1; then
-        ${as_root} service tailscaled start
-    fi
-
-    say "Starting Tailscale login..."
-    if [ -r /dev/tty ] && [ -w /dev/tty ]; then
-        ${as_root} tailscale up </dev/tty >/dev/tty
-    else
-        ${as_root} tailscale up
-    fi
-}
-
 temporary_directory="$(mktemp -d "${TMPDIR:-/tmp}/sshdesk-install.XXXXXX")"
 if [ "${operating_system}" = "Darwin" ]; then
     install_macos_prerequisites
@@ -609,10 +512,8 @@ if [ "${operating_system}" = "Darwin" ]; then
     configure_macos_openssh
     say "SSHDESK is installed and macOS Remote Login is running."
     say "Connect with: ssh ${requested_user}@<server-address>"
-    say "Grant Screen Recording and Accessibility permission to the installed Python"
-    say "process in System Settings > Privacy & Security before connecting."
-    prompt_tailscale
-    install_tailscale
+    say "Grant Screen Recording and Accessibility permission to the installed SSHDESK"
+    say "executables in System Settings > Privacy & Security before connecting."
     say "Installation complete."
     exit 0
 fi
@@ -700,15 +601,4 @@ start_openssh
 say "SSHDESK is installed and OpenSSH is running."
 say "Connect with: ssh ${requested_user}@<server-address>"
 
-# Tailscale is intentionally last so an optional network setup cannot interrupt
-# SSHDESK package installation or leave an unvalidated sshd configuration.
-prompt_tailscale
-install_tailscale
-
-if command -v tailscale >/dev/null 2>&1; then
-    tailscale_ip="$(tailscale ip -4 2>/dev/null | head -n 1 || true)"
-    if [ -n "${tailscale_ip}" ]; then
-        say "Tailscale SSHDESK address: ssh ${requested_user}@${tailscale_ip}"
-    fi
-fi
 say "Installation complete."

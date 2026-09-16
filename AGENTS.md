@@ -11,34 +11,40 @@ in this repository must tell the user this.
 
 ## Development setup
 
-SSHDESK requires Python 3.10 or newer. Create a local virtual environment and
-install the package with its development dependencies:
+SSHDESK's native implementation requires Zig 0.15.2. Build without running
+privileged installers:
 
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e '.[dev]'
+```sh
+scripts/with-zig-sdk.sh zig build -Doptimize=ReleaseSafe
 ```
 
-Install `.[dev,fast]` only when testing the optional NumPy and OpenCV capture
-paths. Do not run the privileged host installation scripts for routine
-development.
+On Windows run `zig build -Doptimize=ReleaseSafe` directly. The macOS wrapper
+selects an existing compatible SDK without changing system configuration.
 
 ## Verification
 
-Run the same core checks used by CI:
-
-```bash
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/ruff check src tests
+```sh
+zig fmt --check build.zig native
+scripts/with-zig-sdk.sh zig build test
+scripts/with-zig-sdk.sh zig build -Doptimize=ReleaseSafe
+python3 -m unittest tests.test_native_integration -v
 for script in scripts/*.sh; do sh -n "$script"; done
 ```
 
-For focused SSH routing work, run:
+Parse all `scripts/*.ps1` using PowerShell's language parser on Windows. CI runs
+native builds/tests on Linux, macOS, and Windows and Xvfb tests on Linux.
+Record live desktop validation separately from synthetic tests and compilation.
 
-```bash
-.venv/bin/python -m unittest tests.test_agent tests.test_installer -v
+Python currently remains a temporary behavioral reference. Until the parity
+items in `docs/zig-port.md` pass, also run the reference checks:
+
+```sh
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/ruff check src tests tools
 ```
+
+Do not remove reference tests or packaging merely to make the migration appear
+complete. Native installation and normal operation must not depend on them.
 
 ## Engineering constraints
 

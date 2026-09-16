@@ -1,0 +1,19 @@
+test_agent_interrupt_restores_session_resources (tests.test_native_integration.NativeContracts.test_agent_interrupt_restores_session_resources) ... ok
+test_bounded_json_session_recovers_and_quits (tests.test_native_integration.NativeContracts.test_bounded_json_session_recovers_and_quits) ... ok
+test_invalid_options_are_rejected_before_capture (tests.test_native_integration.NativeContracts.test_invalid_options_are_rejected_before_capture) ... ok
+test_nine_native_commands_and_help (tests.test_native_integration.NativeContracts.test_nine_native_commands_and_help) ... ok
+test_non_pty_and_exact_forced_command_allowlist (tests.test_native_integration.NativeContracts.test_non_pty_and_exact_forced_command_allowlist) ... ok
+test_remote_fixed_argv_unicode_timeout_and_response (tests.test_native_integration.NativeContracts.test_remote_fixed_argv_unicode_timeout_and_response) ... ok
+test_synthetic_check_and_color_fallbacks (tests.test_native_integration.NativeContracts.test_synthetic_check_and_color_fallbacks) ... ok
+test_tmux_split_uses_fixed_argv (tests.test_native_integration.NativeContracts.test_tmux_split_uses_fixed_argv) ... ok
+test_wayland_native_agent_argv_and_uppercase_modifiers (tests.test_native_integration.NativeContracts.test_wayland_native_agent_argv_and_uppercase_modifiers) ... skipped 'Linux Wayland backend fixture'
+test_detach_resize_and_restore (tests.test_native_integration.NativePtyContracts.test_detach_resize_and_restore) ... ok
+test_input_stays_responsive_under_output_backpressure (tests.test_native_integration.NativePtyContracts.test_input_stays_responsive_under_output_backpressure) ... ok
+test_kitty_probe_and_native_pixels (tests.test_native_integration.NativePtyContracts.test_kitty_probe_and_native_pixels) ... ok
+test_shell_retains_authenticated_identity (tests.test_native_integration.NativePtyContracts.test_shell_retains_authenticated_identity) ... ok
+test_signal_cleanup (tests.test_native_integration.NativePtyContracts.test_signal_cleanup) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 2.680s
+
+OK (skipped=1)
