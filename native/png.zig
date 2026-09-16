@@ -81,3 +81,17 @@ test "PNG roundtrip verifies decoded RGB pixels, malformed input" {
     try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(frame.pixels), std.mem.sliceAsBytes(decoded.pixels));
     try std.testing.expectError(error.InvalidPng, png.decode(std.testing.allocator, "bad png"));
 }
+
+fn allocationExercise(a: std.mem.Allocator) !void {
+    const png: Png = .{};
+    var frame = try Frame.init(a, 2, 2);
+    defer frame.deinit();
+    @memset(frame.pixels, .{ 255, 128, 0 });
+    const bytes = try png.encodePalette(a, frame);
+    defer a.free(bytes);
+    var decoded = try png.decode(a, bytes);
+    defer decoded.deinit();
+}
+test "PNG encode and decode release ownership on allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationExercise, .{});
+}

@@ -5,13 +5,14 @@ native executables sharing the modules in `native/`. libpng 1.6.58 and zlib 1.3.
 are pinned by content hash and linked statically. Installers build the native
 commands without pip, virtual environments, or a Python runtime.
 
-## Migration gate
+## Behavioral coverage
 
-The Python implementation and its old behavioral tests are retained temporarily
-as a reference. Removing them is gated on native behavioral coverage and native
-Linux/macOS/Windows CI, not on successful cross-compilation alone. This branch
-must not be described as a completed language replacement while that gate is
-open.
+The Python implementation, packaging, and runtime dependencies have been removed.
+The baseline remains available at commit
+`3a6e421de5101973852e8735a202dcc1a5c6288a`; the
+[test migration ledger](test-migration.md) records every original behavioral
+case and its native replacement. The retained integration/installer harness
+uses Python's standard library only and is not installed with SSHDESK.
 
 | Behavior | Native verification |
 | --- | --- |
@@ -31,12 +32,6 @@ open.
 | Subprocess deadlines, bounded output, ignored TERM, descendant cleanup | `process.zig` |
 | Installer syntax and removed-option rejection | shell checks, PowerShell parser, installer tests |
 
-Still requiring parity review before removing the reference: backend failure
-messages and cleanup under all original fault-injection cases, and complete
-command-specific parser/exit-code
-compatibility. The old reference suite remains available to catch regressions
-in those contracts while the native tests are expanded.
-
 ## Live versus automated evidence
 
 Local evidence is retained in `artifacts/zig-port/`:
@@ -45,13 +40,16 @@ Local evidence is retained in `artifacts/zig-port/`:
 - real CoreGraphics capture and accessibility permission check, 2304×1296;
 - Linux AArch64 executables running in a Debian container with Xvfb, using
   FFmpeg, MIT-SHM, and XGetImage, plus XTest input readback;
-- Windows x86-64 ReleaseSafe cross-compilation and PowerShell syntax parsing.
+- Windows x86-64 native CI, including synthetic ConPTY rendering, resize, Unicode,
+  detach, and PowerShell syntax parsing.
 
 Live GNOME/PipeWire, KDE/wlroots, and Windows interactive-desktop validation has
-not been performed. Windows cross-compilation is not a Windows runtime test.
+not been performed. ConPTY tests validate terminal sessions, not GDI/SendInput
+against a logged-in Windows desktop.
 No privileged host installers have been run and the host SSH configuration has
-not been changed. CI is configured for native Linux, macOS, and Windows builds;
-its results must be recorded separately when run.
+not been changed. Native Linux, macOS, and Windows CI passed
+[before reference removal](https://github.com/madeye/sshdesk/actions/runs/35057059884).
+Final-tree runs are available in the [branch CI history](https://github.com/madeye/sshdesk/actions/workflows/test.yml?query=branch%3Afeature%2Fzig-port).
 
 ## Benchmark
 

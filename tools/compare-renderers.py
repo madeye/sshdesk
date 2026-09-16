@@ -1,4 +1,4 @@
-"""Matching static RGB workload. Requires the retained Python reference and Pillow."""
+"""Matching static RGB workload. Requires an external Python baseline checkout and Pillow."""
 import argparse
 import hashlib
 import json
@@ -9,15 +9,15 @@ import time
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--reference-root", type=Path, default=Path("src"))
+parser.add_argument("--reference-root", type=Path, required=True)
 parser.add_argument("--native-bin", type=Path, default=Path("zig-out/bin/sshdesk-bench"))
 parser.add_argument("--output", type=Path, default=Path("artifacts/zig-port/benchmark"))
 args = parser.parse_args()
 sys.path.insert(0, str(args.reference_root.resolve()))
 from PIL import Image, ImageDraw
 from PIL import __version__ as pillow_version
-
 from sshdesk.capture.base import Frame
+
 from sshdesk.render import (
     ColorMode,
     TerminalCapabilities,

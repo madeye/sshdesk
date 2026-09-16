@@ -78,7 +78,7 @@ class NativeContracts(unittest.TestCase):
     def test_invalid_options_are_rejected_before_capture(self) -> None:
         for args in (("--tailscale",), ("--no-tailscale",), ("--max-fps", "invalid"), ("--capture", "invalid")):
             self.assertEqual(self.command("sshdesk-server", *args).returncode, 2)
-        for args in (("--max-fps", "nan"), ("--scale", "2")):
+        for args in (("--max-fps", "nan"), ("--max-fps", "0.5"), ("--scale", "2")):
             self.assertEqual(self.command("sshdesk-server", *args).returncode, 1)
         self.assertEqual(self.command("sshdesk-agent", "info", "--output", "x").returncode, 2)
         self.assertNotEqual(self.command("sshdesk-remote", "-oProxyCommand=id", "info").returncode, 0)
@@ -107,7 +107,7 @@ class NativeContracts(unittest.TestCase):
             info = self.command("sshdesk-remote", "alice@example.com", "info", env=environment)
             self.assertEqual(json.loads(info.stdout), {"platform": "fixture", "width": 320})
             started = time.monotonic()
-            timed = self.command("sshdesk-remote", "alice@example.com", "--timeout", "0.1", "info",
+            timed = self.command("sshdesk-remote", "--timeout=0.1", "alice@example.com", "info",
                                  env={**environment, "STALL": "1"})
             self.assertNotEqual(timed.returncode, 0)
             self.assertIn(b"TimedOut", timed.stderr)
@@ -159,7 +159,7 @@ class NativeContracts(unittest.TestCase):
             shim.chmod(0o755)
             environment = {**os.environ, "PATH": directory + os.pathsep + os.environ["PATH"],
                            "RECORD": str(root / "calls.jsonl"), "TMUX": "fixture", "TMUX_PANE": "%7"}
-            result = self.command("sshdesk-split", "alice@example.com", "--direction", "left", "--size", "40", env=environment)
+            result = self.command("sshdesk-split", "--direction=left", "--size=40", "alice@example.com", env=environment)
             self.assertEqual(result.returncode, 0, result.stderr)
             calls = [json.loads(line) for line in (root / "calls.jsonl").read_text().splitlines()]
             self.assertEqual(calls[-1], ["split-window", "-h", "-b", "-p", "40", "-t", "%7", "--", "ssh", "alice@example.com"])
@@ -278,6 +278,21 @@ class NativePtyContracts(unittest.TestCase):
 
 @unittest.skipUnless(os.name == "nt" and (BIN / "sshdesk.exe").is_file(), "native Windows ConPTY test")
 class NativeWindowsPtyContracts(unittest.TestCase):
+    def test_shell_selector_uses_authenticated_account_without_login_flag(self) -> None:
+        from unittest.mock import patch
+
+        from tests.windows_pty import Console
+
+        with patch.dict(os.environ, {"SSH_ORIGINAL_COMMAND": "shell", "RUN_AS": "unrelated-desktop-owner",
+                                     "COMSPEC": str(Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe")}):
+            console = Console([executable("sshdesk-forced-command")])
+        try:
+            console.write(b"echo SSHDESK_ACCOUNT=%USERNAME%\r\nexit\r\n")
+            console.wait_for(("SSHDESK_ACCOUNT=" + os.environ["USERNAME"]).encode())
+            self.assertEqual(console.wait(), 0)
+        finally:
+            console.close()
+
     def test_synthetic_session_resize_detach_and_utf8(self) -> None:
         from unittest.mock import patch
 

@@ -44,7 +44,7 @@ fn boundedFloat(s: []const u8, min: f64, max: f64) !f64 {
     if (!std.math.isFinite(value) or value < min or value > max) return error.OptionOutOfRange;
     return value;
 }
-fn expandEquals(args: []const []const u8) !std.ArrayList([]const u8) {
+pub fn expandEquals(args: []const []const u8) !std.ArrayList([]const u8) {
     var words: std.ArrayList([]const u8) = .empty;
     errdefer words.deinit(std.heap.page_allocator);
     var positional = false;
@@ -214,12 +214,13 @@ fn setEnvironment(a: A, name: []const u8, value: []const u8) !void {
 }
 fn serverOptions(a: A, args: []const []const u8) !Options {
     var options = try parseOptions(args);
+    if (options.fps_explicit and options.fps < 1) return error.OptionOutOfRange;
     var env = try std.process.getEnvMap(a);
     defer env.deinit();
     if (options.display) |display| try setEnvironment(a, "DISPLAY", display);
     if (!options.fps_explicit) if (env.get("SSHDESK_MAX_FPS")) |value| {
         if (!eq(value, "auto")) {
-            options.fps = try boundedFloat(value, 0.5, 120);
+            options.fps = try boundedFloat(value, 1, 120);
             options.fps_explicit = true;
         }
     };
@@ -254,10 +255,13 @@ pub fn dispatch(a: A, command: []const u8, args: []const []const u8) !u8 {
         return agentCommand(a, words.items.items[1..]);
     }
     if (eq(command, "sshdesk-forced-command")) return forced(a);
-    for (args) |arg| if (eq(arg, "--help") or eq(arg, "-h")) {
-        try help(command);
-        return 0;
-    };
+    for (args) |arg| {
+        if (eq(arg, "--")) break;
+        if (eq(arg, "--help") or eq(arg, "-h")) {
+            try help(command);
+            return 0;
+        }
+    }
     if (eq(command, "sshdesk-agent")) return agentCommand(a, args);
     if (eq(command, "sshdesk-local")) {
         var opts = try parseOptions(args);

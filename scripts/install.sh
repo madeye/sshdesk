@@ -214,7 +214,7 @@ install_gnome_streaming_support() {
         ${as_root} apk add \
             glib gstreamer gst-plugins-base gst-plugin-pipewire
     else
-        fail "install PyGObject, GStreamer, and its PipeWire plugin, then rerun"
+        fail "install GLib/GIO, GStreamer, and its PipeWire plugin, then rerun"
     fi
     gnome_streaming_is_ready || \
         fail "GStreamer PipeWire support is unavailable after package installation"

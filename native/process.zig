@@ -41,7 +41,10 @@ pub fn runWithInput(a: std.mem.Allocator, argv: []const []const u8, bytes: ?[]co
             terminate(&child);
         }
         if (@import("builtin").os.tag != .windows) std.posix.kill(-group_id, std.posix.SIG.KILL) catch {};
-        if (writer) |thread| thread.join();
+        if (writer) |thread| {
+            if (@import("builtin").os.tag == .windows) @import("terminal.zig").cancelThread(thread);
+            thread.join();
+        }
     }
     if (bytes) |data| {
         writer = try std.Thread.spawn(.{}, InputWriter.run, .{InputWriter{ .file = child.stdin.?, .bytes = data }});

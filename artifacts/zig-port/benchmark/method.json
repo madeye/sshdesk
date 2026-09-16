@@ -1,9 +1,11 @@
 {
   "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
   "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "pillow": "12.3.0",
+  "reference_commit": "3a6e421de5101973852e8735a202dcc1a5c6288a",
   "zig": "0.15.2",
   "fixture_sha256": "590b3d69db251f868a87c28b1d90f5047ea81a9d140aa761671f85203f88749f",
-  "native_executable_sha256": "c3b36eff1e035b3c15a96cb53e5a54ac183098d8132df54fff25fa8f661daeb3",
+  "native_executable_sha256": "6ba44bdcf0b23f691202f2a1ac0ef62cd6ed178595e552458b6cb89e5f41661b",
   "conditions": "ReleaseSafe native executable; sequential implementations; run with builds stopped",
   "workload": "1920x1080 static RGB; 100x30 ANSI256; resize, render, diff, encode; 10 warmups + 100 measured; no terminal I/O or capture"
 }

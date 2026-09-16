@@ -321,3 +321,13 @@ test "JSON actions clamp repetitions and reject non-finite values and oversized 
     try std.testing.expectError(error.TextTooLong, textValid(&(@as([max_text + 1]u8, @splat('a')))));
     try std.testing.expectError(error.CoordinateOutsideSupportedRange, coordinate(65536));
 }
+
+fn responseAllocationExercise(a: A) !void {
+    var controller: Controller = .{ .allocator = a, .capture_name = "synthetic" };
+    defer controller.deinit();
+    const response = try respond(&controller, "{\"id\":\"世界\",\"action\":\"wait\",\"seconds\":0}");
+    defer a.free(response.bytes);
+}
+test "agent JSON response allocation failures release parsed values" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, responseAllocationExercise, .{});
+}

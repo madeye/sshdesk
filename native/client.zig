@@ -6,7 +6,23 @@ const A = std.mem.Allocator;
 fn eq(a: []const u8, b: []const u8) bool {
     return std.mem.eql(u8, a, b);
 }
-pub fn run(a: A, command: []const u8, args: []const []const u8) !u8 {
+pub fn run(a: A, command: []const u8, raw: []const []const u8) !u8 {
+    var words = try cli.expandEquals(raw);
+    defer words.deinit(std.heap.page_allocator);
+    // argparse accepted global options on either side of the SSH target.
+    var target_index: usize = 0;
+    while (target_index < words.items.len and std.mem.startsWith(u8, words.items[target_index], "--")) {
+        const option = words.items[target_index];
+        const allowed = if (eq(command, "sshdesk-split")) eq(option, "--direction") or eq(option, "--size") else eq(option, "--timeout");
+        if (!allowed) return error.UnknownOption;
+        if (target_index + 1 >= words.items.len) return error.MissingOptionValue;
+        target_index += 2;
+    }
+    if (target_index >= words.items.len) return error.InvalidSshTarget;
+    const target = words.items[target_index];
+    std.mem.copyBackwards([]const u8, words.items[1 .. target_index + 1], words.items[0..target_index]);
+    words.items[0] = target;
+    const args = words.items;
     if (args.len == 0 or !routing.validTarget(args[0])) return error.InvalidSshTarget;
     if (eq(command, "sshdesk-split")) return split(a, args);
     var offset: usize = 1;

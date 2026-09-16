@@ -9,7 +9,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install.sh"
 WINDOWS_INSTALLER = ROOT / "scripts" / "install.ps1"
-FORCED_COMMAND = ROOT / "scripts" / "sshdesk-forced-command"
 CONFIGURE_SSHD = ROOT / "scripts" / "configure-sshd.sh"
 
 
@@ -17,7 +16,6 @@ CONFIGURE_SSHD = ROOT / "scripts" / "configure-sshd.sh"
 class InstallerTests(unittest.TestCase):
     def test_bootstrap_has_valid_shell_syntax_and_help(self) -> None:
         subprocess.run(["sh", "-n", INSTALLER], check=True)
-        subprocess.run(["sh", "-n", FORCED_COMMAND], check=True)
         subprocess.run(["sh", "-n", CONFIGURE_SSHD], check=True)
         result = subprocess.run(
             ["sh", INSTALLER, "--help"],
@@ -27,19 +25,6 @@ class InstallerTests(unittest.TestCase):
         )
         self.assertIn("--user USER", result.stdout)
         self.assertIn('Linux|Darwin)', INSTALLER.read_text())
-
-    def test_posix_forced_command_accepts_shell_selector(self) -> None:
-        environment = os.environ.copy()
-        environment["SSH_ORIGINAL_COMMAND"] = "shell"
-        result = subprocess.run(
-            ["sh", FORCED_COMMAND],
-            capture_output=True,
-            check=False,
-            env=environment,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("requires an interactive terminal", result.stderr)
 
     def test_removed_network_options_are_unknown(self) -> None:
         for option in ("--tailscale", "--no-tailscale"):
@@ -79,15 +64,23 @@ class WindowsInstallerTests(unittest.TestCase):
         self.assertIn("[CmdletBinding()]", source)
 
 
-class PackageCompatibilityTests(unittest.TestCase):
-    def test_license_uses_pep621_table_for_older_setuptools(self) -> None:
-        source = (ROOT / "pyproject.toml").read_text()
-        self.assertIn('license = { text = "MIT" }', source)
-        self.assertNotIn("license-files", source)
+class NativeBuildTests(unittest.TestCase):
+    def test_pinned_native_build_and_dependency_licenses(self) -> None:
+        build = (ROOT / "build.zig").read_text()
+        manifest = (ROOT / "build.zig.zon").read_text()
+        self.assertIn('builtin.zig_version_string, "0.15.2"', build)
+        self.assertIn('.minimum_zig_version = "0.15.2"', manifest)
+        self.assertEqual(manifest.count('.hash = '), 2)
+        self.assertIn('libpng-LICENSE', build)
+        self.assertIn('zlib-LICENSE', build)
+        self.assertIn('MIT License', (ROOT / "LICENSE").read_text())
 
-    def test_linux_installer_allows_isolated_build_dependencies(self) -> None:
-        source = (ROOT / "scripts" / "install-server.sh").read_text()
-        self.assertNotIn("--no-build-isolation", source)
+    def test_installers_build_native_commands_without_python_setup(self) -> None:
+        for name in ("install-server.sh", "install-macos.sh", "install-windows.ps1"):
+            source = (ROOT / "scripts" / name).read_text()
+            self.assertIn('build -Doptimize=ReleaseSafe', source)
+            self.assertNotIn('pip install', source)
+            self.assertNotIn('-m venv', source)
 
 
 if __name__ == "__main__":

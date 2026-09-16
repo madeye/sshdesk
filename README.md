@@ -138,7 +138,7 @@ display stack:
 | KDE Plasma Wayland | `spectacle` | `ydotool` + `ydotoold` |
 
 The one-line installer handles these dependencies automatically. For a manual
-installation, GNOME needs PyGObject, GStreamer base introspection, and the
+installation, GNOME needs GLib/GIO, GStreamer and its appsink library, and the
 GStreamer PipeWire plugin. Other Wayland desktops need their listed capture
 command and ydotool 1.0.4 or newer. FFmpeg and NumPy/OpenCV are X11 acceleration
 paths. Non-GNOME Wayland input requires `ydotoold` access to `/dev/uinput`; do
@@ -353,14 +353,12 @@ compatible macOS SDK for Zig 0.15.2; it does not change `xcode-select`. Set
 pinned and compiled into the executables. Other backend libraries are loaded
 only when selected. Installation and native commands do not use Python.
 
-The port is still undergoing behavioral parity validation. The Python source,
-packaging, and old tests remain temporarily as a reference and must not be
-removed before the remaining checks in [port status](docs/zig-port.md) pass.
-Native executable integration tests use only Python's standard library as a
+See [port validation](docs/zig-port.md) and the [test migration ledger](docs/test-migration.md)
+for coverage and live-platform limitations. Native executable integration tests use only Python's standard library as a
 development harness:
 
 ```bash
-python3 -m unittest tests.test_native_integration -v
+python3 -m unittest discover -s tests -v
 ```
 
 Raw matching-workload benchmark results are under

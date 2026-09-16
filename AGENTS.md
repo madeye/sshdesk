@@ -35,16 +35,10 @@ Parse all `scripts/*.ps1` using PowerShell's language parser on Windows. CI runs
 native builds/tests on Linux, macOS, and Windows and Xvfb tests on Linux.
 Record live desktop validation separately from synthetic tests and compilation.
 
-Python currently remains a temporary behavioral reference. Until the parity
-items in `docs/zig-port.md` pass, also run the reference checks:
-
-```sh
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/ruff check src tests tools
-```
-
-Do not remove reference tests or packaging merely to make the migration appear
-complete. Native installation and normal operation must not depend on them.
+The optional black-box integration harness uses only Python's standard library;
+installation and normal operation require no Python. Run it with
+`python3 -m unittest discover -s tests -v`. The migration ledger is in
+`docs/test-migration.md`.
 
 ## Engineering constraints
 
@@ -55,8 +49,8 @@ complete. Native installation and normal operation must not depend on them.
 - Never start a normal shell through `RUN_AS`, `sudo`, or the desktop owner's
   account. Shell access must retain the authenticated SSH account identity.
 - Keep agent commands restricted to the existing parser and exact allowlist.
-- Preserve Linux, macOS, and Windows import behavior when changing shared Python
-  modules.
+- Compile platform integrations conditionally; synthetic tests and unrelated
+  commands must work without optional desktop backend libraries.
 - Add focused tests for behavior changes and keep unrelated refactors separate.
 
 ## Working tree

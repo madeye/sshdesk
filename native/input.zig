@@ -268,6 +268,22 @@ test "input bound and special key names" {
     try std.testing.expectError(error.UnknownKey, named("$(id)"));
 }
 
+test "key mapping, SGR scroll and legacy release preserve terminal semantics" {
+    var p: Parser = .{};
+    try p.feed("aA\r\x7f\t\x1b[A\x1b[24~\x01");
+    for ([_]Key{ .character, .character, .enter, .backspace, .tab, .up, .f12, .character }, 0..) |key, i| {
+        const event = p.next(0).?.key;
+        try std.testing.expectEqual(key, event.key);
+        if (i == 7) try std.testing.expectEqual(@as(u3, 4), event.modifiers);
+    }
+    try p.feed("\x1b[<32;11;6M\x1b[<64;11;6M\x1b[<65;11;6M");
+    try std.testing.expectEqual(Point{ .column = 10, .row = 5 }, p.next(1).?.move);
+    try std.testing.expectEqual(@as(i32, 1), p.next(1).?.scroll.amount);
+    try std.testing.expectEqual(@as(i32, -1), p.next(1).?.scroll.amount);
+    try p.feed("\x1b[M" ++ [_]u8{ 35, 42, 37 });
+    try std.testing.expect(!p.next(1).?.button.pressed);
+}
+
 test "legacy mouse, modified function keys, cursor replies and Alt remain distinct" {
     var parser: Parser = .{};
     try parser.feed("\x1b[M");
