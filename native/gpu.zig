@@ -4,6 +4,9 @@ pub const Span = extern struct { first: u32, length: u32, offset: u32, error_bou
 extern fn sshdesk_metal_create([*:0]const u8) ?*anyopaque;
 extern fn sshdesk_metal_destroy(*anyopaque) void;
 extern fn sshdesk_metal_pass(*anyopaque, [*]const u8, usize, [*]const Span, usize, [*]const u32, usize, [*][4]u8, u32, u32, u32, u32) c_int;
+// Fault injection is compiled out of production executables.
+pub var testing_reject_passes = false;
+pub var testing_rejected_passes: usize = 0;
 var mutex: std.Thread.Mutex = .{};
 var context: ?*anyopaque = null;
 var attempted = false;
@@ -33,6 +36,12 @@ pub fn deinit() void {
     used.store(false, .release);
 }
 pub fn pass(source: []const u8, spans: []const Span, weights: []const u32, output: [][4]u8, source_width: usize, width: usize, height: usize, vertical: bool) bool {
+    if (builtin.is_test and testing_reject_passes) {
+        testing_rejected_passes += 1;
+        // Simulate a failed dispatch leaving unusable partial output behind.
+        @memset(std.mem.sliceAsBytes(output), 0xff);
+        return false;
+    }
     if (builtin.os.tag != .macos) return false;
     mutex.lock();
     defer mutex.unlock();

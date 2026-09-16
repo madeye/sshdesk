@@ -55,13 +55,13 @@ pub const Frame = struct {
         defer vertical_filter.deinit(a);
         // Traverse source and destination rows contiguously. Coefficients depend
         // only on geometry, so compute them once rather than for every row.
-        if (!(want_gpu and try horizontal_filter.applyGpu(a, self.pixels, self.width, width, self.height, false, horizontal.pixels))) for (0..self.height) |y| {
+        if (!(want_gpu and horizontal_filter.applyGpu(a, self.pixels, self.width, width, self.height, false, horizontal.pixels))) for (0..self.height) |y| {
             const source = self.pixels[y * self.width ..][0..self.width];
             for (horizontal_filter.spans, 0..) |span, x| {
                 horizontal.pixels[y * width + x] = horizontal_filter.apply(span, source, 1);
             }
         };
-        if (!(want_gpu and try vertical_filter.applyGpu(a, horizontal.pixels, width, width, height, true, out.pixels))) for (vertical_filter.spans, 0..) |span, y| {
+        if (!(want_gpu and vertical_filter.applyGpu(a, horizontal.pixels, width, width, height, true, out.pixels))) for (vertical_filter.spans, 0..) |span, y| {
             for (0..width) |x| out.pixels[y * width + x] = vertical_filter.apply(span, horizontal.pixels[x..], width);
         };
         return out;
@@ -114,8 +114,8 @@ const Filter = struct {
         }
         return .{ .spans = spans, .weights = weights, .fixed = fixed };
     }
-    fn applyGpu(self: Filter, a: Allocator, source: []const RGB, source_width: usize, width: usize, height: usize, vertical: bool, destination: []RGB) !bool {
-        const spans = try a.alloc(gpu.Span, self.spans.len);
+    fn applyGpu(self: Filter, a: Allocator, source: []const RGB, source_width: usize, width: usize, height: usize, vertical: bool, destination: []RGB) bool {
+        const spans = a.alloc(gpu.Span, self.spans.len) catch return false;
         defer a.free(spans);
         for (spans, self.spans) |*packed_span, span| packed_span.* = .{
             .first = @intCast(span.first),
@@ -123,7 +123,7 @@ const Filter = struct {
             .offset = @intCast(span.offset),
             .error_bound = span.error_bound,
         };
-        const output = try a.alloc([4]u8, destination.len);
+        const output = a.alloc([4]u8, destination.len) catch return false;
         defer a.free(output);
         if (!gpu.pass(std.mem.sliceAsBytes(source), spans, self.fixed, output, source_width, width, height, vertical)) return false;
         for (output, destination, 0..) |pixel, *rgb, index| {
@@ -205,7 +205,9 @@ test "owned frames, stable fingerprints, bilinear pixels and invalid dimensions"
 fn allocationScenario(a: Allocator) !void {
     var f = try synthetic(a, 16, 9, null);
     defer f.deinit();
-    var small = try f.resize(a, 4, 3);
+    // Required CPU allocations propagate OOM. Optional GPU staging failures
+    // are tested separately because they must recover successfully.
+    var small = try f.resizeImpl(a, 4, 3, false);
     defer small.deinit();
 }
 test "frame allocation failures release ownership" {
@@ -358,4 +360,40 @@ test "Metal buffers remain isolated across concurrent resize calls" {
     second.run();
     thread.join();
     try std.testing.expect(first.ok and second.ok);
+}
+
+test "failed GPU passes fall back to exact SIMD CPU pixels" {
+    const a = std.testing.allocator;
+    gpu.testing_reject_passes = true;
+    gpu.testing_rejected_passes = 0;
+    defer gpu.testing_reject_passes = false;
+    var source = try Frame.init(a, 97, 53);
+    defer source.deinit();
+    var random = std.Random.DefaultPrng.init(91);
+    random.random().bytes(std.mem.sliceAsBytes(source.pixels));
+    var expected = try referenceResize(source, a, 19, 12);
+    defer expected.deinit();
+    var actual = try source.resizeImpl(a, 19, 12, true);
+    defer actual.deinit();
+    try std.testing.expectEqual(@as(usize, 2), gpu.testing_rejected_passes);
+    try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(expected.pixels), std.mem.sliceAsBytes(actual.pixels));
+}
+
+test "GPU staging allocation failures fall back without further allocation" {
+    const a = std.testing.allocator;
+    var source = try Frame.init(a, 97, 53);
+    defer source.deinit();
+    var random = std.Random.DefaultPrng.init(92);
+    random.random().bytes(std.mem.sliceAsBytes(source.pixels));
+    var expected = try referenceResize(source, a, 19, 12);
+    defer expected.deinit();
+    // Output, intermediate frame, and two filters require eight allocations.
+    // Failure of either GPU-only staging allocation must leave CPU usable.
+    for ([_]usize{ 8, 9 }) |fail_index| {
+        var failing = std.testing.FailingAllocator.init(a, .{ .fail_index = fail_index });
+        var actual = try source.resizeImpl(failing.allocator(), 19, 12, true);
+        defer actual.deinit();
+        try std.testing.expect(failing.has_induced_failure);
+        try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(expected.pixels), std.mem.sliceAsBytes(actual.pixels));
+    }
 }

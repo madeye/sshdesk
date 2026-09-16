@@ -317,7 +317,8 @@ for smoother sessions on slower clients or networks.
 `SSHDESK_RESIZE=auto` uses Metal compute for downscaling images with at least
 262,144 pixels on macOS. Smaller images and other platforms use the optimized
 CPU resizer. `cpu` disables GPU resizing; `metal` requests it for all resize
-sizes on macOS. Metal initialization or execution failure falls back to CPU.
+sizes on macOS. Metal initialization, execution, or staging allocation failure falls back to
+the SIMD CPU resizer.
 Both paths preserve the original filtered pixels, including rounding at edges.
 
 ## macOS and Windows host details

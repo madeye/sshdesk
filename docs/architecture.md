@@ -113,6 +113,8 @@ controller serializes a reusable device/queue and shared buffers through a
 small ARC-managed Objective-C bridge. Each GPU pass produces RGB plus rounding
 flags; Zig corrects flagged channels before the next pass. Dispatch, upload,
 synchronization, readback, and correction are included in the retained timings.
-A failed or unavailable GPU falls back to CPU. Resources are released after
+A failed or unavailable GPU falls back to the fixed-point SIMD CPU resizer.
+GPU-only staging allocation failures also fall back; each failed pass is fully
+recomputed on the CPU, without further allocation. Resources are released after
 session workers join. `SSHDESK_RESIZE=cpu` disables Metal, and `metal` requests
 it explicitly. Tests use CPU unless Metal is explicitly requested.
