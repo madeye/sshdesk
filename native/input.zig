@@ -282,6 +282,10 @@ test "key mapping, SGR scroll and legacy release preserve terminal semantics" {
     try std.testing.expectEqual(@as(i32, -1), p.next(1).?.scroll.amount);
     try p.feed("\x1b[M" ++ [_]u8{ 35, 42, 37 });
     try std.testing.expect(!p.next(1).?.button.pressed);
+    try p.feed("\x1b[1;2D\x1b[3;3~\x1b[Z");
+    try std.testing.expectEqual(KeyEvent{ .key = .left, .modifiers = 1 }, p.next(2).?.key);
+    try std.testing.expectEqual(KeyEvent{ .key = .delete, .modifiers = 2 }, p.next(2).?.key);
+    try std.testing.expectEqual(KeyEvent{ .key = .tab, .modifiers = 1 }, p.next(2).?.key);
 }
 
 test "legacy mouse, modified function keys, cursor replies and Alt remain distinct" {

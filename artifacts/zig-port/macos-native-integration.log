@@ -19,10 +19,11 @@ test_input_stays_responsive_under_output_backpressure (test_native_integration.N
 test_kitty_probe_and_native_pixels (test_native_integration.NativePtyContracts.test_kitty_probe_and_native_pixels) ... ok
 test_shell_retains_authenticated_identity (test_native_integration.NativePtyContracts.test_shell_retains_authenticated_identity) ... ok
 test_signal_cleanup (test_native_integration.NativePtyContracts.test_signal_cleanup) ... ok
+test_terminal_restored_after_handled_failure (test_native_integration.NativePtyContracts.test_terminal_restored_after_handled_failure) ... ok
 test_shell_selector_uses_authenticated_account_without_login_flag (test_native_integration.NativeWindowsPtyContracts.test_shell_selector_uses_authenticated_account_without_login_flag) ... skipped 'native Windows ConPTY test'
 test_synthetic_session_resize_detach_and_utf8 (test_native_integration.NativeWindowsPtyContracts.test_synthetic_session_resize_detach_and_utf8) ... skipped 'native Windows ConPTY test'
 
 ----------------------------------------------------------------------
-Ran 23 tests in 2.379s
+Ran 24 tests in 2.446s
 
 OK (skipped=4)

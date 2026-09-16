@@ -190,6 +190,24 @@ class NativeContracts(unittest.TestCase):
 
 @unittest.skipUnless(os.name == "posix" and (BIN / "sshdesk").is_file(), "native POSIX PTY test")
 class NativePtyContracts(unittest.TestCase):
+    def test_terminal_restored_after_handled_failure(self) -> None:
+        import pty
+        import termios
+
+        master, slave = pty.openpty()
+        before = termios.tcgetattr(slave)
+        try:
+            environment = {**os.environ, "TERM": "xterm-256color", "SSHDESK_RENDER": "invalid"}
+            result = subprocess.run([executable("sshdesk-server"), "--capture", "synthetic", "--no-input"],
+                                    stdin=slave, stdout=slave, stderr=subprocess.PIPE,
+                                    env=environment, timeout=5, check=False)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(b"InvalidRenderMode", result.stderr)
+            self.assertEqual(termios.tcgetattr(slave), before)
+        finally:
+            os.close(master)
+            os.close(slave)
+
     def session(self, *, kitty: bool = False, terminate: bool = False, backpressure: bool = False,
                 shell: bool = False) -> bytes:
         import fcntl
