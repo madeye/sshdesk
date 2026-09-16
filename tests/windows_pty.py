@@ -125,11 +125,17 @@ class Console:
 
     def wait_for(self, marker: bytes, timeout: float = 10):
         deadline = time.monotonic() + timeout
+        exited_at = None
         while time.monotonic() < deadline:
             if marker in self.output:
                 return
             if self.api.WaitForSingleObject(self.process.process, 10) == 0:
-                break
+                # Console output can outlive the client; let the reader drain it.
+                if exited_at is None:
+                    exited_at = time.monotonic()
+                if time.monotonic() - exited_at > 0.5:
+                    break
+                time.sleep(0.01)
         raise AssertionError(f"ConPTY did not produce {marker!r}: {bytes(self.output[-2000:])!r}")
 
     def wait(self, timeout: float = 3):

@@ -304,11 +304,14 @@ class NativeWindowsPtyContracts(unittest.TestCase):
         from tests.windows_pty import Console
 
         with patch.dict(os.environ, {"SSH_ORIGINAL_COMMAND": "shell", "RUN_AS": "unrelated-desktop-owner",
+                                     "PROMPT": "SSHDESK_READY$G",
                                      "COMSPEC": str(Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe")}):
             console = Console([executable("sshdesk-forced-command")])
         try:
-            console.write(b"echo SSHDESK_ACCOUNT=%USERNAME%\r\nexit\r\n")
+            console.wait_for(b"SSHDESK_READY>")
+            console.write(b"echo SSHDESK_ACCOUNT=%USERNAME%\r")
             console.wait_for(("SSHDESK_ACCOUNT=" + os.environ["USERNAME"]).encode())
+            console.write(b"exit\r")
             self.assertEqual(console.wait(), 0)
         finally:
             console.close()
